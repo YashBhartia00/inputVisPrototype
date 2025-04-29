@@ -1,0 +1,219 @@
+/* styles.css */
+body {
+  font-family: Arial, sans-serif;
+  margin: 0;
+  padding: 20px;
+  touch-action: none;
+  user-select: none;
+}
+
+.controls {
+  margin-bottom: 20px;
+}
+
+button {
+  margin-right: 10px;
+  padding: 10px 20px;
+  font-size: 16px;
+  cursor: pointer;
+  background-color: #f0f0f0;
+  border: 1px solid #ddd;
+  border-radius: 4px;
+}
+
+button:hover {
+  background-color: #e0e0e0;
+}
+
+.container {
+  display: flex;
+}
+
+#chart-container {
+  width: 600px;
+  height: 500px;
+  border: 1px solid #ccc;
+  background: #f9f9f9;
+  margin-right: 20px;
+}
+
+.dropdown-matrix {
+  width: 100%;
+  border-collapse: collapse;
+  text-align: center;
+}
+
+.dropdown-matrix th, 
+.dropdown-matrix td {
+  padding: 5px;
+  border: 1px solid #ddd;
+}
+
+.dropdown-matrix th {
+  background-color: #f4f4f4;
+  font-weight: bold;
+}
+
+.dropdown-matrix select {
+  width: 100%;
+  padding: 5px;
+  font-size: 14px;
+}
+
+/* Bars and their interactive handles */
+.bar {
+  cursor: pointer;
+  touch-action: none;
+  user-select: none;
+}
+
+.handle {
+  fill: transparent;
+  pointer-events: all;
+}
+
+.layout-container {
+  display: flex;
+  width: 100%;
+  flex-direction: row;
+}
+
+.chart-area {
+  flex: 3;
+  min-height: 500px;
+  margin-right: 20px;
+}
+
+.controls-area {
+  flex: 2;
+  padding-left: 20px;
+  max-width: 500px;
+}
+
+/* Settings button */
+.settings-button {
+  position: fixed;
+  bottom: 20px;
+  right: 20px;
+  width: 50px;
+  height: 50px;
+  border-radius: 50%;
+  background-color: #4a90e2;
+  color: white;
+  border: none;
+  box-shadow: 0 2px 5px rgba(0, 0, 0, 0.2);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  cursor: pointer;
+  z-index: 100;
+}
+
+.settings-button:hover {
+  background-color: #3a7bcf;
+}
+
+/* Modal styles */
+.modal {
+  display: none;
+  position: fixed;
+  top: 0;
+  left: 0;
+  width: 100%;
+  height: 100%;
+  background-color: rgba(0, 0, 0, 0.5);
+  z-index: 1000;
+}
+
+.modal-content {
+  position: relative;
+  background-color: #fff;
+  margin: 5% auto;
+  padding: 0;
+  width: 80%;
+  max-width: 800px;
+  border-radius: 5px;
+  box-shadow: 0 4px 8px rgba(0, 0, 0, 0.1);
+}
+
+.modal-header {
+  padding: 15px 20px;
+  background-color: #f0f0f0;
+  border-bottom: 1px solid #ddd;
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  border-radius: 5px 5px 0 0;
+}
+
+.modal-header h2 {
+  margin: 0;
+  color: #333;
+}
+
+.close-modal {
+  color: #aaa;
+  font-size: 28px;
+  font-weight: bold;
+  cursor: pointer;
+}
+
+.close-modal:hover {
+  color: #333;
+}
+
+.modal-body {
+  padding: 20px;
+  max-height: 70vh;
+  overflow-y: auto;
+}
+
+.modal-controls {
+  margin-top: 20px;
+  display: flex;
+  justify-content: flex-end;
+  gap: 10px;
+}
+
+.modal-btn {
+  padding: 10px 20px;
+  cursor: pointer;
+  border-radius: 4px;
+}
+
+.modal-btn:first-child {
+  background-color: #4a90e2;
+  color: white;
+  border: none;
+}
+
+.modal-btn:first-child:hover {
+  background-color: #3a7bcf;
+}
+
+.pointer-events-none {
+  pointer-events: none;
+}
+
+.point-interaction {
+  stroke: transparent;
+  stroke-width: 15px;
+  fill: transparent;
+  pointer-events: all;
+}
+
+/* Pastel color scheme */
+:root {
+  --pastel-blue: #a8d0e6;
+  --pastel-red: #f8a5c2;
+  --pastel-green: #b5e7a0;
+  --pastel-yellow: #f9e07f;
+  --pastel-purple: #d3c0f9;
+  --pastel-orange: #f9c784;
+  --pastel-pink: #ffb6b9;
+  --pastel-teal: #ade1e5;
+}
+
+.chart-bg {
+  fill: #f9f9f9;
+}
