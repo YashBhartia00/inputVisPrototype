@@ -44,10 +44,25 @@ const functionsMapScatter = {
     alert("removeCategoryColor called – implement as needed.");
   },
   scatterChangePointLoc: function(data) {
-    const { index, x, y, deltaX, deltaY, isPreview, isFinalUpdate, eventX, eventY, xScale, yScale } = data;
-    
+    const { index, eventX, eventY, xScale, yScale, isPreview, isFinalUpdate } = data;
+    console.log("scatterChangePointLoc called", data);
+
     if (!scatterData[index]) return;
-    
+
+    // Ensure xScale and yScale exist
+    if (!xScale || !yScale) {
+      console.error("xScale or yScale is missing in data");
+      return;
+    }
+
+    // Convert screen coordinates to data values
+    const newX = xScale.invert(eventX);
+    const newY = yScale.invert(eventY);
+
+    // Round values
+    const roundedX = Math.round(newX);
+    const roundedY = Math.round(newY);
+
     // Store original position before preview updates
     if (isPreview && !scatterData[index]._originalPos) {
       scatterData[index]._originalPos = {
@@ -55,35 +70,20 @@ const functionsMapScatter = {
         y: scatterData[index].y
       };
     }
-    
-    // If we have direct screen coordinates, use them to calculate new position
-    if (eventX !== undefined && eventY !== undefined && xScale && yScale) {
-      // Convert screen coordinates to data values
-      const newX = xScale.invert(eventX);
-      const newY = yScale.invert(eventY);
-      
-      // Round values
-      scatterData[index].x = Math.round(newX);
-      scatterData[index].y = Math.round(newY);
-    }
-    // Otherwise use delta movement if available
-    else if (isPreview && deltaX !== undefined && deltaY !== undefined) {
-      // For preview during drag, calculate new position based on drag distance
-      const scaleFactor = 0.5; // Adjust movement sensitivity
-      scatterData[index].x = Math.round(scatterData[index]._originalPos.x + deltaX * scaleFactor);
-      scatterData[index].y = Math.round(scatterData[index]._originalPos.y - deltaY * scaleFactor); // Invert Y as screen coords are inverted
-    } 
-    // For final updates, just keep current position but clean up
-    else if (isFinalUpdate) {
+
+    if (isPreview) {
+      // For preview during drag, update to the position
+      scatterData[index].x = roundedX;
+      scatterData[index].y = roundedY;
+    } else if (isFinalUpdate) {
+      // For final update, just keep the current value (already updated in preview)
       delete scatterData[index]._originalPos;
+    } else {
+      // For direct value setting, update the position directly
+      scatterData[index].x = roundedX;
+      scatterData[index].y = roundedY;
     }
-    // For direct value setting
-    else if (x !== undefined && y !== undefined) {
-      scatterData[index].x = Math.round(x);
-      scatterData[index].y = Math.round(y);
-      delete scatterData[index]._originalPos;
-    }
-    
+
     renderScatterplot();
   },
   scatterChangeStart: function(data) {
@@ -148,7 +148,7 @@ function renderScatterplot() {
     .attr("class", "chart-bg")
     .attr("x", 50)
     .attr("y", 30)
-    .attr("width", 600 - 100)
+    .attr("width", 600  )
     .attr("height", 500 - 80)
     .attr("fill", "#f9f9f9")
     .lower();
@@ -162,14 +162,17 @@ function renderScatterplot() {
   const xMax = Math.max(50, xExtent[1]);
   const yMin = Math.min(-50, yExtent[0]);
   const yMax = Math.max(50, yExtent[1]);
+  const xMaxAbs = Math.max(Math.abs(xMin), Math.abs(xMax), 100);
+  const yMaxAbs = Math.max(Math.abs(yMin), Math.abs(yMax), 100);
+  
   
   const xScale = d3.scaleLinear()
-    .domain([xMin, xMax])
+    .domain([-xMaxAbs, xMaxAbs])
     .range([50, 600 - 50])
     .nice(); // Make the scale use "nice" round numbers
   
   const yScale = d3.scaleLinear()
-    .domain([yMin, yMax])
+    .domain([-yMaxAbs, yMaxAbs])
     .range([500 - 30, 30])
     .nice(); // Make the scale use "nice" round numbers
   
@@ -231,7 +234,7 @@ function renderScatterplot() {
     .attr("stroke", "rgba(0,0,0,0.1)")
     .attr("stroke-width", 1)
     .each(function(d, i) {
-      addHammerEvents(this, { index: i, x: d.x, y: d.y }, "point");
+      addHammerEvents(this, { index: i, x: d.x, y: d.y, xScale: xScale, yScale: yScale }, "point");
     });
   
   // Add visible points without direct events (they'll be handled by the larger circles)
@@ -248,11 +251,11 @@ function renderScatterplot() {
   points.append("text")
     .attr("class", "point-label pointer-events-none")
     .attr("x", d => xScale(d.x))
-    .attr("y", d => yScale(d.y) - 15)
+    .attr("y", d => yScale(d.y) + 15)
     .attr("text-anchor", "middle")
     .attr("font-size", "10px")
     .attr("font-weight", "bold")
-    .text(d => `${d.category}: (${Math.round(d.x)},${Math.round(d.y)})`);
+    .text(d => `(${Math.round(d.x)},${Math.round(d.y)})`);
   
   // Add legend
   const legend = svg.append("g")
@@ -283,8 +286,11 @@ function renderScatterplot() {
       addHammerEvents(this, { xScale: xScale, yScale: yScale }, "outsidePoints");
     });
     
-  // Update event handling for background to capture click location
+  // We'll modify this event handler to register on chart-bg, but won't call it directly anymore
+  // Instead, we'll let the HammerJS events get the coordinates and pass them to all gestures
   svg.select(".chart-bg").on("click", function(event) {
+    // This is now just a backup for native browser events
+    // HammerJS will handle the gesture recognition and coordinate passing
     const coords = d3.pointer(event);
     const eventX = coords[0];
     const eventY = coords[1];

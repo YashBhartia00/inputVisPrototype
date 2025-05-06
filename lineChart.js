@@ -32,6 +32,8 @@ const functionsMapLine = {
       // Add the point with the calculated height
       lineData.push({ day: newDay, height: newHeight });
       renderLineChart();
+    } else {
+      console.error(data.eventY, data.yScale, "Invalid event position or scale for adding point.");
     }
   },
   lineRemovePoint: function(data) {
@@ -179,7 +181,7 @@ function renderLineChart() {
     .lower();
   
   const xScale = d3.scaleLinear()
-    .domain([d3.min(lineData, d => d.day) || 0, d3.max(lineData, d => d.day) || 10])
+    .domain([d3.min(lineData, d => d.day) || 0, (d3.max(lineData, d => d.day) || 10) + 1])
     .range([40, 600 - 40]);
   
   const yScale = d3.scaleLinear()
@@ -281,11 +283,12 @@ function renderLineChart() {
       addHammerEvents(this, { yScale: yScale }, "outsideLines");
     });
     
-  // Update event handlers for background to capture click location
+  // Keep this as a fallback for native browser clicks, but coordinates will also come from HammerJS
   svg.select(".chart-bg").on("click", function(event) {
     const coords = d3.pointer(event);
+    const eventX = coords[0];
     const eventY = coords[1];
-    triggerFunction("outsideLines", "tap", { eventY: eventY, yScale: yScale });
+    triggerFunction("outsideLines", "tap", { eventX: eventX, eventY: eventY, yScale: yScale });
   });
 }
 

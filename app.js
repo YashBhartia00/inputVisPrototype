@@ -23,7 +23,7 @@ const chartConfig = {
     parts: ["point", "line", "outsideLines"]
   },
   heatmap: {
-    functions: ["heatmapAddTime", "heatmapRemoveTime", "heatmapAddColumn", "heatmapRemoveColumns", "heatmapMergeColumns"],
+    functions: ["heatmapAddTime", "heatmapRemoveTime", "heatmapAddColumn", "heatmapRemoveColumns", "heatmapMergeColumns", "heatmapChangeTime"],
     parts: ["cell", "outsideCells"]
   },
   scatterplot: {
@@ -215,8 +215,8 @@ function resetChartData() {
   [
     { task: "snacks", value: 2 },
     { task: "homemade", value: 3 },
-    { task: "fruuit", value: 1 },
-    { task: "junk", value: 5 }
+    { task: "fruit", value: 1 },
+    { task: "outside", value: 5 }
   ].forEach(item => pieData.push(item));
   
   // Line Chart - reset to defaults
@@ -383,16 +383,31 @@ function addHammerEvents(element, data, part) {
   // Create a unique ID for this element's interactions
   const elementId = Math.random().toString(36).substring(2, 15);
   
+  // Helper function to get chart-relative coordinates
+  function getChartCoordinates(ev) {
+    const chartContainer = document.getElementById("chart-container");
+    const chartRect = chartContainer.getBoundingClientRect();
+    return {
+      eventX: ev.center.x - chartRect.left,
+      eventY: ev.center.y - chartRect.top
+    };
+  }
+  
   manager.on("tap", function(ev) {
-    triggerFunction(part, "tap", data);
+    // Get coordinates relative to chart container
+    const coords = getChartCoordinates(ev);
+    // Add coordinates to the data for all gesture types
+    triggerFunction(part, "tap", { ...data, ...coords });
   });
   
   manager.on("doubletap", function(ev) {
-    triggerFunction(part, "double tap", data);
+    const coords = getChartCoordinates(ev);
+    triggerFunction(part, "double tap", { ...data, ...coords });
   });
   
   manager.on("press", function(ev) {
-    triggerFunction(part, "hold", data);
+    const coords = getChartCoordinates(ev);
+    triggerFunction(part, "hold", { ...data, ...coords });
   });
   
   // Pan handling with continuous updates during the interaction
@@ -407,80 +422,99 @@ function addHammerEvents(element, data, part) {
   });
   
   manager.on("pan", function(ev) {
-    if (interactionState[elementId]) {
-      const deltaX = ev.center.x - interactionState[elementId].startX;
-      const deltaY = ev.center.y - interactionState[elementId].startY;
-      
-      // Calculate change based on distance
-      const distance = Math.sqrt(deltaX * deltaX + deltaY * deltaY);
-      const direction = deltaY > 0 ? 1 : -1; // Positive for down, negative for up
-      const amount = Math.round(distance / 10) * direction; // Scale by distance, 10px = 1 unit
-      
-      // Only update if the amount changed to avoid excessive renders
-      if (amount !== interactionState[elementId].lastUpdateDelta) {
-        // Prepare data with current values for visualization
-        const updatedData = {...interactionState[elementId].startData, 
-          deltaX,
-          deltaY,
-          amount: amount,
-          distance,
-          isPreview: true,  // Flag that this is a preview update
-          eventX: ev.center.x, // Add current position coordinates
-          eventY: ev.center.y,
-          yPosition: ev.center.y // Add y position for line/bar charts
-        };
-        
-        // Trigger the function with current values for visual feedback
-        triggerFunction(part, "pan", updatedData);
-        
-        // Store this update amount
-        interactionState[elementId].lastUpdateDelta = amount;
+  if (interactionState[elementId]) {
+    const chartContainer = document.getElementById("chart-container");
+    const chartRect = chartContainer.getBoundingClientRect();
+
+    // Adjust for chart container offset
+    const deltaX = ev.center.x - interactionState[elementId].startX;
+    const deltaY = ev.center.y - interactionState[elementId].startY;
+
+    const chartX = ev.center.x - chartRect.left; // X position relative to chart
+    const chartY = ev.center.y - chartRect.top;  // Y position relative to chart
+
+    // Calculate change based on distance
+    const distance = Math.sqrt(deltaX * deltaX + deltaY * deltaY);
+    var direction = deltaY > 0 ? 1 : -1; // Positive for down, negative for up
+    if(deltaY < 30) direction = deltaX > 0 ? -1 : 1; // Horizontal pan
+    const amount = Math.round(distance / 10) * direction; // Scale by distance, 10px = 1 unit
+
+    // Only update if the amount changed to avoid excessive renders
+    if (amount !== interactionState[elementId].lastUpdateDelta) {
+      // Prepare data with current values for visualization
+      const updatedData = {
+        ...interactionState[elementId].startData,
+        deltaX,
+        deltaY,
+        amount: amount,
+        distance,
+        isPreview: true,  // Flag that this is a preview update
+        eventX: chartX,   // Adjusted X position in chart space
+        eventY: chartY,   // Adjusted Y position in chart space
+        yPosition: chartY // Adjusted Y position for line/bar charts
+      };
+
+      // Trigger the function with current values for visual feedback
+      triggerFunction(part, "pan", updatedData);
+
+      // Store this update amount
+      interactionState[elementId].lastUpdateDelta = amount;
       }
     }
   });
   
   manager.on("panend", function(ev) {
     if (interactionState[elementId]) {
-      const deltaX = ev.center.x - interactionState[elementId].startX;
-      const deltaY = ev.center.y - interactionState[elementId].startY;
-      
-      // Calculate change based on distance
-      const distance = Math.sqrt(deltaX * deltaX + deltaY * deltaY);
-      const direction = deltaY > 0 ? 1 : -1; // Positive for down, negative for up
-      const amount = Math.round(distance / 10) * direction; // Scale by distance, 10px = 1 unit
-      
-      // Prepare data with original values plus calculated changes
-      const updatedData = {...interactionState[elementId].startData, 
-        deltaX,
-        deltaY,
-        amount: amount,
-        distance,
-        isPreview: false,  // Final update, not a preview
-        isFinalUpdate: true, // Flag to indicate this is the final update
-        eventX: ev.center.x, // Add final position coordinates
-        eventY: ev.center.y,
-        yPosition: ev.center.y // Add y position for line/bar charts
-      };
-      
-      // Trigger the function with final values
-      triggerFunction(part, "pan", updatedData);
-      
-      // Clean up
-      delete interactionState[elementId];
+    const chartContainer = document.getElementById("chart-container");
+    const chartRect = chartContainer.getBoundingClientRect();
+
+    // Adjust for chart container offset
+    const deltaX = ev.center.x - interactionState[elementId].startX;
+    const deltaY = ev.center.y - interactionState[elementId].startY;
+
+    const chartX = ev.center.x - chartRect.left; // X position relative to chart
+    const chartY = ev.center.y - chartRect.top;  // Y position relative to chart
+
+    // Calculate change based on distance
+    const distance = Math.sqrt(deltaX * deltaX + deltaY * deltaY);
+    const direction = deltaY > 0 ? 1 : -1; // Positive for down, negative for up
+    const amount = Math.round(distance / 10) * direction; // Scale by distance, 10px = 1 unit
+
+    // Prepare data with current values for final update
+    const updatedData = {
+      ...interactionState[elementId].startData,
+      deltaX,
+      deltaY,
+      amount: amount,
+      distance,
+      isPreview: false,  // Final update
+      isFinalUpdate: true, // Flag to indicate this is the final update
+      eventX: chartX,   // Adjusted X position in chart space
+      eventY: chartY,   // Adjusted Y position in chart space
+      yPosition: chartY // Adjusted Y position for line/bar charts
+    };
+
+    // Trigger the function with current values for final update
+    triggerFunction(part, "pan", updatedData);
+    
+    // Clean up
+    delete interactionState[elementId];
     }
   });
   
   // Pinch handling with continuous updates
   manager.on("pinchstart", function(ev) {
+    const coords = getChartCoordinates(ev);
     interactionState[elementId] = {
       startScale: ev.scale,
-      startData: {...data},
+      startData: {...data, ...coords},
       lastUpdateScale: 0
     };
   });
   
   manager.on("pinch", function(ev) {
     if (interactionState[elementId]) {
+      const coords = getChartCoordinates(ev);
       const scaleChange = ev.scale - interactionState[elementId].startScale;
       const scaleFactor = Math.abs(scaleChange) * 10; // Scale by a factor
       const amount = Math.round(scaleFactor) * (scaleChange > 0 ? 1 : -1);
@@ -488,7 +522,9 @@ function addHammerEvents(element, data, part) {
       // Only update if the scale changed significantly to avoid excessive renders
       if (Math.abs(amount - interactionState[elementId].lastUpdateScale) >= 1) {
         // Prepare data with current values for visualization
-        const updatedData = {...interactionState[elementId].startData, 
+        const updatedData = {
+          ...interactionState[elementId].startData, 
+          ...coords,
           scaleChange,
           amount: amount,
           isPreview: true  // Flag that this is a preview update
@@ -511,11 +547,14 @@ function addHammerEvents(element, data, part) {
   
   manager.on("pinchend", function(ev) {
     if (interactionState[elementId]) {
+      const coords = getChartCoordinates(ev);
       const scaleChange = ev.scale - interactionState[elementId].startScale;
       const scaleFactor = Math.abs(scaleChange) * 10; // Scale by a factor
       
       // Prepare data with original values plus calculated changes
-      const updatedData = {...interactionState[elementId].startData, 
+      const updatedData = {
+        ...interactionState[elementId].startData, 
+        ...coords,
         scaleChange,
         amount: Math.round(scaleFactor) * (scaleChange > 0 ? 1 : -1),
         isPreview: false, // Final update, not a preview
@@ -537,10 +576,11 @@ function addHammerEvents(element, data, part) {
   });
   
   manager.on("swipe", function(ev) {
+    const coords = getChartCoordinates(ev);
     if (ev.direction === Hammer.DIRECTION_LEFT) {
-      triggerFunction(part, "swipe left", data);
+      triggerFunction(part, "swipe left", { ...data, ...coords });
     } else if (ev.direction === Hammer.DIRECTION_RIGHT) {
-      triggerFunction(part, "swipe right", data);
+      triggerFunction(part, "swipe right", { ...data, ...coords });
     }
   });
   
@@ -648,9 +688,9 @@ function initializeLayout() {
     .attr("class", "chart-area");
   
   // Create dropdown matrix container (RIGHT)
-  content.append("div")
-    .attr("id", "dropdown-matrix-container")
-    .attr("class", "controls-area");
+  // content.append("div")
+  //   .attr("id", "dropdown-matrix-container")
+  //   .attr("class", "controls-area");
 }
 
 /**************************************************

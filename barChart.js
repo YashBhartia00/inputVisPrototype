@@ -74,6 +74,7 @@ const functionsMapBar = {
     if (bar && yPosition !== undefined && yScale) {
       // Convert screen y coordinate to data value
       let newHeight = yScale.invert(yPosition);
+      console.log("newHeight", yPosition, newHeight);
       
       // Round to nearest whole number and ensure it's not negative
       newHeight = Math.max(0, Math.round(newHeight));
@@ -81,6 +82,7 @@ const functionsMapBar = {
       // Store original value before preview updates
       if (isPreview && !bar._originalValue) {
         bar._originalValue = bar.time;
+        console.log("Storing original value:", bar._originalValue); 
       }
       
       if (isPreview) {

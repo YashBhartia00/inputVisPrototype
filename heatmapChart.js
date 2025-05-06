@@ -23,6 +23,10 @@ const functionsMapHeatmap = {
   heatmapAddTime: function(data) {
     const { row, col, amount, isPreview } = data;
     
+    //make amount absolute
+    var newAmount = Math.abs(amount);
+    newAmount = Math.round(-amount);
+    
     if (heatmapData[row] && typeof heatmapData[row][col] === "number") {
       // Store original value before preview updates
       if (isPreview && !heatmapData[row]._originalValues) {
@@ -31,10 +35,10 @@ const functionsMapHeatmap = {
       
       if (isPreview) {
         // For preview, restore original and add current amount
-        heatmapData[row][col] = heatmapData[row]._originalValues[col] + Math.round(amount);
+        heatmapData[row][col] = heatmapData[row]._originalValues[col] + Math.round(newAmount);
       } else {
         // For final update, add amount and clear stored original
-        heatmapData[row][col] += Math.round(amount);
+        heatmapData[row][col] += Math.round(newAmount);
         delete heatmapData[row]._originalValues;
       }
       
@@ -43,6 +47,9 @@ const functionsMapHeatmap = {
   },
   heatmapRemoveTime: function(data) {
     const { row, col, amount, isPreview } = data;
+
+    newAmount = Math.abs(amount); // Make amount absolute
+    newAmount = -amount;
     
     if (heatmapData[row] && typeof heatmapData[row][col] === "number") {
       // Store original value before preview updates
@@ -52,13 +59,37 @@ const functionsMapHeatmap = {
       
       if (isPreview) {
         // For preview, restore original and subtract current amount
-        heatmapData[row][col] = Math.max(0, heatmapData[row]._originalValues[col] - Math.round(amount));
+        heatmapData[row][col] = Math.max(0, heatmapData[row]._originalValues[col] - Math.round(newAmount));
       } else {
         // For final update, subtract amount and clear stored original
-        heatmapData[row][col] = Math.max(0, heatmapData[row][col] - Math.round(amount));
+        heatmapData[row][col] = Math.max(0, heatmapData[row][col] - Math.round(newAmount));
         delete heatmapData[row]._originalValues;
       }
       
+      renderHeatmap();
+    }
+  },
+  heatmapChangeTime: function(data) {
+    const { row, col, eventX, eventY, xScale, yScale, isPreview } = data;
+
+    if (heatmapData[row] && typeof heatmapData[row][col] === "number") {
+      // Convert screen coordinates to data values
+      const newValue = Math.round(yScale.invert(eventY));
+
+      // Store original value before preview updates
+      if (isPreview && !heatmapData[row]._originalValues) {
+        heatmapData[row]._originalValues = [...heatmapData[row]];
+      }
+
+      if (isPreview) {
+        // For preview, restore original and set to the new value
+        heatmapData[row][col] = newValue;
+      } else {
+        // For final update, set to the new value and clear stored original
+        heatmapData[row][col] = newValue;
+        delete heatmapData[row]._originalValues;
+      }
+
       renderHeatmap();
     }
   },
@@ -223,7 +254,7 @@ function renderHeatmap() {
   
   svg.selectAll(".chart-bg")
     .each(function() {
-      addHammerEvents(this, {}, "outsideCells");
+      addHammerEvents(this, { xScale: xScale, yScale: yScale }, "outsideCells");
     });
 }
 
