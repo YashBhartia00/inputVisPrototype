@@ -29,9 +29,10 @@ const functionsMapLine = {
       newHeight = Math.round(newHeight);
       // Ensure height is not negative
       newHeight = Math.max(0, newHeight);
+      // Add the point with the calculated height
+      lineData.push({ day: newDay, height: newHeight });
+      renderLineChart();
     }
-    lineData.push({ day: newDay, height: newHeight });
-    renderLineChart();
   },
   lineRemovePoint: function(data) {
     const { day, amount } = data;
@@ -39,21 +40,108 @@ const functionsMapLine = {
     if (point) { point.height = Math.max(0, Math.round(point.height - amount)); renderLineChart(); }
   },
   lineAddPointHeight: function(data) {
-    const { day, amount } = data;
+    const { day, amount, isPreview } = data;
     const point = lineData.find(d => d.day === day);
-    if (point) { point.height += Math.round(amount); renderLineChart(); }
+    
+    if (point) {
+      // Store original value before preview updates
+      if (isPreview && !point._originalHeight) {
+        point._originalHeight = point.height;
+      }
+      
+      if (isPreview) {
+        // For preview, restore original and add current amount
+        point.height = point._originalHeight + Math.round(amount);
+      } else {
+        // For final update, add amount and clear stored original
+        point.height += Math.round(amount);
+        delete point._originalHeight;
+      }
+      
+      renderLineChart();
+    }
   },
   lineRemovePointHeight: function(data) {
-    const { day, amount } = data;
+    const { day, amount, isPreview } = data;
     const point = lineData.find(d => d.day === day);
-    if (point) { point.height = Math.max(0, Math.round(point.height - amount)); renderLineChart(); }
+    
+    if (point) {
+      // Store original value before preview updates
+      if (isPreview && !point._originalHeight) {
+        point._originalHeight = point.height;
+      }
+      
+      if (isPreview) {
+        // For preview, restore original and subtract current amount
+        point.height = Math.max(0, point._originalHeight - Math.round(amount));
+      } else {
+        // For final update, subtract amount and clear stored original
+        point.height = Math.max(0, point.height - Math.round(amount));
+        delete point._originalHeight;
+      }
+      
+      renderLineChart();
+    }
   },
   lineChangePointHeight: function(data) {
+    const { day, yPosition, yScale, isPreview, isFinalUpdate } = data;
+    const point = lineData.find(d => d.day === day);
+    
+    if (point && yPosition !== undefined && yScale) {
+      // Convert screen y coordinate to data height
+      let newHeight = yScale.invert(yPosition);
+      
+      // Round to nearest whole number and ensure it's not negative
+      newHeight = Math.max(0, Math.round(newHeight));
+      
+      // Store original height before preview updates
+      if (isPreview && !point._originalHeight) {
+        point._originalHeight = point.height;
+      }
+      
+      if (isPreview) {
+        // For preview during drag, update to the position
+        point.height = newHeight;
+      } else if (isFinalUpdate) {
+        // For final update, just keep the current value (already updated in preview)
+        delete point._originalHeight;
+      } else {
+        // For explicit value setting, update the height directly
+        point.height = newHeight;
+      }
+      
+      renderLineChart();
+    }
+  },
+  lineChangeStart: function(data) {
+    // This function marks the start of a change operation
     const { day } = data;
     const point = lineData.find(d => d.day === day);
+    
     if (point) {
-      const newVal = parseInt(prompt(`Change height for day ${day}:`),10);
-      if (!isNaN(newVal)) { point.height = Math.round(newVal); renderLineChart(); }
+      // Store the starting height
+      point._changeStartHeight = point.height;
+    }
+  },
+  lineChangeEnd: function(data) {
+    // This function completes a change operation using the stored start value
+    const { day, yPosition, yScale } = data;
+    const point = lineData.find(d => d.day === day);
+    
+    if (point && yPosition !== undefined && yScale && point._changeStartHeight !== undefined) {
+      // Convert screen y coordinate to data height
+      let newHeight = yScale.invert(yPosition);
+      
+      // Round to nearest whole number and ensure it's not negative
+      newHeight = Math.max(0, Math.round(newHeight));
+      
+      // Update to final height
+      point.height = newHeight;
+      
+      // Clean up
+      delete point._changeStartHeight;
+      
+      renderLineChart();
     }
   },
   lineAddLine: function(data) {
@@ -130,7 +218,7 @@ function renderLineChart() {
     .attr("stroke", "rgba(0,0,0,0.1)")
     .attr("stroke-width", 1)
     .each(function(d) {
-      addHammerEvents(this, { day: d.day, amount: 1 }, "point");
+      addHammerEvents(this, { day: d.day, amount: 1, yScale: yScale }, "point");
     });
   
   // Add visible points but without direct events (they'll be handled by the larger circles)

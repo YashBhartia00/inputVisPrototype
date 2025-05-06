@@ -213,10 +213,10 @@ function resetChartData() {
   // Pie Chart - reset to defaults
   pieData.length = 0;
   [
-    { task: "Protein", value: 200 },
-    { task: "Carbs", value: 300 },
-    { task: "Fats", value: 100 },
-    { task: "Veggies", value: 150 }
+    { task: "snacks", value: 2 },
+    { task: "homemade", value: 3 },
+    { task: "fruuit", value: 1 },
+    { task: "junk", value: 5 }
   ].forEach(item => pieData.push(item));
   
   // Line Chart - reset to defaults
@@ -364,6 +364,9 @@ function triggerFunction(part, eventType, data) {
  * recognizeWith and requireFailure, plus pan/pinch etc.
  **************************************************/
 
+// Store interaction data (start values, etc.)
+const interactionState = {};
+
 function addHammerEvents(element, data, part) {
   const manager = new Hammer.Manager(element);
   const tap = new Hammer.Tap({ event: 'tap', taps: 1 });
@@ -377,32 +380,170 @@ function addHammerEvents(element, data, part) {
   doubleTap.recognizeWith(tap);
   tap.requireFailure(doubleTap);
   
+  // Create a unique ID for this element's interactions
+  const elementId = Math.random().toString(36).substring(2, 15);
+  
   manager.on("tap", function(ev) {
     triggerFunction(part, "tap", data);
   });
+  
   manager.on("doubletap", function(ev) {
     triggerFunction(part, "double tap", data);
   });
+  
   manager.on("press", function(ev) {
     triggerFunction(part, "hold", data);
   });
-  manager.on("pan", function(ev) {
-    triggerFunction(part, "pan", data);
+  
+  // Pan handling with continuous updates during the interaction
+  manager.on("panstart", function(ev) {
+    // Store initial state
+    interactionState[elementId] = {
+      startX: ev.center.x,
+      startY: ev.center.y,
+      startData: {...data},
+      lastUpdateDelta: 0  // Track last update to avoid excessive renders
+    };
   });
-  manager.on("pinch", function(ev) {
-    if(ev.scale < 1) {
-      triggerFunction(part, "pinch in", data);
-    } else if(ev.scale > 1) {
-      triggerFunction(part, "pinch out", data);
+  
+  manager.on("pan", function(ev) {
+    if (interactionState[elementId]) {
+      const deltaX = ev.center.x - interactionState[elementId].startX;
+      const deltaY = ev.center.y - interactionState[elementId].startY;
+      
+      // Calculate change based on distance
+      const distance = Math.sqrt(deltaX * deltaX + deltaY * deltaY);
+      const direction = deltaY > 0 ? 1 : -1; // Positive for down, negative for up
+      const amount = Math.round(distance / 10) * direction; // Scale by distance, 10px = 1 unit
+      
+      // Only update if the amount changed to avoid excessive renders
+      if (amount !== interactionState[elementId].lastUpdateDelta) {
+        // Prepare data with current values for visualization
+        const updatedData = {...interactionState[elementId].startData, 
+          deltaX,
+          deltaY,
+          amount: amount,
+          distance,
+          isPreview: true,  // Flag that this is a preview update
+          eventX: ev.center.x, // Add current position coordinates
+          eventY: ev.center.y,
+          yPosition: ev.center.y // Add y position for line/bar charts
+        };
+        
+        // Trigger the function with current values for visual feedback
+        triggerFunction(part, "pan", updatedData);
+        
+        // Store this update amount
+        interactionState[elementId].lastUpdateDelta = amount;
+      }
     }
   });
+  
+  manager.on("panend", function(ev) {
+    if (interactionState[elementId]) {
+      const deltaX = ev.center.x - interactionState[elementId].startX;
+      const deltaY = ev.center.y - interactionState[elementId].startY;
+      
+      // Calculate change based on distance
+      const distance = Math.sqrt(deltaX * deltaX + deltaY * deltaY);
+      const direction = deltaY > 0 ? 1 : -1; // Positive for down, negative for up
+      const amount = Math.round(distance / 10) * direction; // Scale by distance, 10px = 1 unit
+      
+      // Prepare data with original values plus calculated changes
+      const updatedData = {...interactionState[elementId].startData, 
+        deltaX,
+        deltaY,
+        amount: amount,
+        distance,
+        isPreview: false,  // Final update, not a preview
+        isFinalUpdate: true, // Flag to indicate this is the final update
+        eventX: ev.center.x, // Add final position coordinates
+        eventY: ev.center.y,
+        yPosition: ev.center.y // Add y position for line/bar charts
+      };
+      
+      // Trigger the function with final values
+      triggerFunction(part, "pan", updatedData);
+      
+      // Clean up
+      delete interactionState[elementId];
+    }
+  });
+  
+  // Pinch handling with continuous updates
+  manager.on("pinchstart", function(ev) {
+    interactionState[elementId] = {
+      startScale: ev.scale,
+      startData: {...data},
+      lastUpdateScale: 0
+    };
+  });
+  
+  manager.on("pinch", function(ev) {
+    if (interactionState[elementId]) {
+      const scaleChange = ev.scale - interactionState[elementId].startScale;
+      const scaleFactor = Math.abs(scaleChange) * 10; // Scale by a factor
+      const amount = Math.round(scaleFactor) * (scaleChange > 0 ? 1 : -1);
+      
+      // Only update if the scale changed significantly to avoid excessive renders
+      if (Math.abs(amount - interactionState[elementId].lastUpdateScale) >= 1) {
+        // Prepare data with current values for visualization
+        const updatedData = {...interactionState[elementId].startData, 
+          scaleChange,
+          amount: amount,
+          isPreview: true  // Flag that this is a preview update
+        };
+        
+        // Trigger the appropriate function based on pinch direction
+        if (ev.scale < 1) {
+          triggerFunction(part, "pinch in", updatedData);
+        } else if (ev.scale > 1) {
+          triggerFunction(part, "pinch out", updatedData);
+        } else {
+          triggerFunction(part, "pinch", updatedData);
+        }
+        
+        // Store this update scale
+        interactionState[elementId].lastUpdateScale = amount;
+      }
+    }
+  });
+  
+  manager.on("pinchend", function(ev) {
+    if (interactionState[elementId]) {
+      const scaleChange = ev.scale - interactionState[elementId].startScale;
+      const scaleFactor = Math.abs(scaleChange) * 10; // Scale by a factor
+      
+      // Prepare data with original values plus calculated changes
+      const updatedData = {...interactionState[elementId].startData, 
+        scaleChange,
+        amount: Math.round(scaleFactor) * (scaleChange > 0 ? 1 : -1),
+        isPreview: false, // Final update, not a preview
+        isFinalUpdate: true // Flag to indicate this is the final update
+      };
+      
+      // Trigger the appropriate function based on pinch direction
+      if (ev.scale < 1) {
+        triggerFunction(part, "pinch in", updatedData);
+      } else if (ev.scale > 1) {
+        triggerFunction(part, "pinch out", updatedData);
+      } else {
+        triggerFunction(part, "pinch", updatedData);
+      }
+      
+      // Clean up
+      delete interactionState[elementId];
+    }
+  });
+  
   manager.on("swipe", function(ev) {
-    if(ev.direction === Hammer.DIRECTION_LEFT) {
+    if (ev.direction === Hammer.DIRECTION_LEFT) {
       triggerFunction(part, "swipe left", data);
-    } else if(ev.direction === Hammer.DIRECTION_RIGHT) {
+    } else if (ev.direction === Hammer.DIRECTION_RIGHT) {
       triggerFunction(part, "swipe right", data);
     }
   });
+  
   return manager;
 }
 

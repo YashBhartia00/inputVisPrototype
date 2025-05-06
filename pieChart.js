@@ -18,14 +18,48 @@ let pieData = [
 
 const functionsMapPie = {
   pieAddToSection: function(data) {
-    const { task, amount } = data;
+    const { task, amount, isPreview } = data;
     const slice = pieData.find(d => d.task === task);
-    if (slice) { slice.value += Math.round(amount); renderPieChart(); }
+    
+    if (slice) {
+      // Store original value before preview updates
+      if (isPreview && !slice._originalValue) {
+        slice._originalValue = slice.value;
+      }
+      
+      if (isPreview) {
+        // For preview, restore original and add current amount
+        slice.value = slice._originalValue + Math.round(amount);
+      } else {
+        // For final update, add amount and clear stored original
+        slice.value += Math.round(amount);
+        delete slice._originalValue;
+      }
+      
+      renderPieChart();
+    }
   },
   pieRemoveFromSection: function(data) {
-    const { task, amount } = data;
+    const { task, amount, isPreview } = data;
     const slice = pieData.find(d => d.task === task);
-    if (slice) { slice.value = Math.max(0, Math.round(slice.value - amount)); renderPieChart(); }
+    
+    if (slice) {
+      // Store original value before preview updates
+      if (isPreview && !slice._originalValue) {
+        slice._originalValue = slice.value;
+      }
+      
+      if (isPreview) {
+        // For preview, restore original and subtract current amount
+        slice.value = Math.max(0, slice._originalValue - Math.round(amount));
+      } else {
+        // For final update, subtract amount and clear stored original
+        slice.value = Math.max(0, slice.value - Math.round(amount));
+        delete slice._originalValue;
+      }
+      
+      renderPieChart();
+    }
   },
   pieChangeSection: function(data) {
     const { task } = data;

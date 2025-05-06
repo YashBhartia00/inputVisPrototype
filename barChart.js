@@ -18,21 +18,112 @@ let barData = [
 
 const functionsMapBar = {
   barAddToBar: function(data) {
-    const { subject, amount } = data;
+    const { subject, amount, isPreview, isFinalUpdate } = data;
     const bar = barData.find(d => d.subject === subject);
-    if (bar) { bar.time += Math.round(amount); renderBarChart(); }
+    
+    if (bar) {
+      // Store original value before preview updates
+      if (isPreview && !bar._originalValue) {
+        bar._originalValue = bar.time;
+      }
+      
+      if (isPreview) {
+        // For preview, restore original and add current amount
+        bar.time = bar._originalValue + Math.round(amount);
+      } else if (isFinalUpdate) {
+        // For final update, just keep the current value (already updated in preview)
+        delete bar._originalValue;
+      } else {
+        // For normal update (not preview/final), add amount
+        bar.time += Math.round(amount);
+      }
+      
+      renderBarChart();
+    }
   },
   barRemoveFromBar: function(data) {
-    const { subject, amount } = data;
+    const { subject, amount, isPreview, isFinalUpdate } = data;
     const bar = barData.find(d => d.subject === subject);
-    if (bar) { bar.time = Math.max(0, Math.round(bar.time - amount)); renderBarChart(); }
+    
+    if (bar) {
+      // Store original value before preview updates
+      if (isPreview && !bar._originalValue) {
+        bar._originalValue = bar.time;
+      }
+      
+      if (isPreview) {
+        // For preview, restore original and subtract current amount
+        bar.time = Math.max(0, bar._originalValue - Math.round(amount));
+      } else if (isFinalUpdate) {
+        // For final update, just keep the current value (already updated in preview)
+        delete bar._originalValue;
+      } else {
+        // For normal update (not preview/final), subtract amount
+        bar.time = Math.max(0, bar.time - Math.round(amount));
+      }
+      
+      renderBarChart();
+    }
   },
   barChangeBar: function(data) {
+    const { subject, yPosition, yScale, isPreview } = data;
+    console.log("barChangeBar", subject, yPosition, yScale, isPreview);
+    console.log("barData", data);
+    const bar = barData.find(d => d.subject === subject);
+    
+    if (bar && yPosition !== undefined && yScale) {
+      // Convert screen y coordinate to data value
+      let newHeight = yScale.invert(yPosition);
+      
+      // Round to nearest whole number and ensure it's not negative
+      newHeight = Math.max(0, Math.round(newHeight));
+      
+      // Store original value before preview updates
+      if (isPreview && !bar._originalValue) {
+        bar._originalValue = bar.time;
+      }
+      
+      if (isPreview) {
+        // For preview during drag, update to the position
+        bar.time = newHeight;
+      } else {
+        // For final update, set to the new height and clear stored original
+        bar.time = newHeight;
+        delete bar._originalValue;
+      }
+      
+      renderBarChart();
+    }
+  },
+  barChangeStart: function(data) {
+    // This function marks the start of a change operation
     const { subject } = data;
     const bar = barData.find(d => d.subject === subject);
+    
     if (bar) {
-      const newVal = parseInt(prompt(`Change value for ${subject}:`),10);
-      if (!isNaN(newVal)) { bar.time = Math.round(newVal); renderBarChart(); }
+      // Store the starting value
+      bar._changeStartValue = bar.time;
+    }
+  },
+  barChangeEnd: function(data) {
+    // This function completes a change operation using the stored start value
+    const { subject, yPosition, yScale } = data;
+    const bar = barData.find(d => d.subject === subject);
+    
+    if (bar && yPosition !== undefined && yScale && bar._changeStartValue !== undefined) {
+      // Convert screen y coordinate to data value
+      let newHeight = yScale.invert(yPosition);
+      
+      // Round to nearest whole number and ensure it's not negative
+      newHeight = Math.max(0, Math.round(newHeight));
+      
+      // Update to final value
+      bar.time = newHeight;
+      
+      // Clean up
+      delete bar._changeStartValue;
+      
+      renderBarChart();
     }
   },
   barAddBar: function(data) {
@@ -103,7 +194,7 @@ function renderBarChart() {
     .attr("stroke-width", 2)
     .attr("data-subject", d => d.subject)
     .each(function(d) {
-      addHammerEvents(this, { subject: d.subject, amount: 1 }, "barArea");
+      addHammerEvents(this, { subject: d.subject, amount: 1, yScale: yScale }, "barArea");
     });
   
   // Add value labels above each bar with passthrough events
@@ -131,7 +222,7 @@ function renderBarChart() {
       .attr("height", 25) // Make taller to be easier to interact with
       .attr("fill", "transparent") // Transparent but interactive
       .each(function() {
-        addHammerEvents(this, { subject: d.subject, amount: 1 }, "barTopEdge");
+        addHammerEvents(this, { subject: d.subject, amount: 1, yScale: yScale }, "barTopEdge");
       });
   });
   

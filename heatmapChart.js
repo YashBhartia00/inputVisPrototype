@@ -21,16 +21,44 @@ let heatmapData = [
 
 const functionsMapHeatmap = {
   heatmapAddTime: function(data) {
-    const { row, col, amount } = data;
+    const { row, col, amount, isPreview } = data;
+    
     if (heatmapData[row] && typeof heatmapData[row][col] === "number") {
-      heatmapData[row][col] += Math.round(amount);
+      // Store original value before preview updates
+      if (isPreview && !heatmapData[row]._originalValues) {
+        heatmapData[row]._originalValues = [...heatmapData[row]];
+      }
+      
+      if (isPreview) {
+        // For preview, restore original and add current amount
+        heatmapData[row][col] = heatmapData[row]._originalValues[col] + Math.round(amount);
+      } else {
+        // For final update, add amount and clear stored original
+        heatmapData[row][col] += Math.round(amount);
+        delete heatmapData[row]._originalValues;
+      }
+      
       renderHeatmap();
     }
   },
   heatmapRemoveTime: function(data) {
-    const { row, col, amount } = data;
+    const { row, col, amount, isPreview } = data;
+    
     if (heatmapData[row] && typeof heatmapData[row][col] === "number") {
-      heatmapData[row][col] = Math.max(0, Math.round(heatmapData[row][col] - amount));
+      // Store original value before preview updates
+      if (isPreview && !heatmapData[row]._originalValues) {
+        heatmapData[row]._originalValues = [...heatmapData[row]];
+      }
+      
+      if (isPreview) {
+        // For preview, restore original and subtract current amount
+        heatmapData[row][col] = Math.max(0, heatmapData[row]._originalValues[col] - Math.round(amount));
+      } else {
+        // For final update, subtract amount and clear stored original
+        heatmapData[row][col] = Math.max(0, heatmapData[row][col] - Math.round(amount));
+        delete heatmapData[row]._originalValues;
+      }
+      
       renderHeatmap();
     }
   },
@@ -78,7 +106,7 @@ function renderHeatmap() {
   // Create pastel color scale
   const colorScale = d3.scaleSequential()
     .domain([0, d3.max(heatmapData.flat())])
-    .interpolator(d3.interpolate("var(--pastel-blue)", "var(--pastel-purple)"));
+    .interpolator(d3.interpolateRgb("#a8d0e6", "#d3c0f9")); // Direct RGB interpolation between pastel blue and purple
   
   // Render cells.
   for(let i = 0; i < numRows; i++){

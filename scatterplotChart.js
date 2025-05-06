@@ -25,7 +25,9 @@ const functionsMapScatter = {
       // Round to nearest whole numbers for cleaner data
       const roundedX = Math.round(x);
       const roundedY = Math.round(y);
-      scatterData.push({ x: roundedX, y: roundedY, category: "New" });
+      // Use the first category if available instead of creating a new one
+      const firstCategory = scatterData.length > 0 ? scatterData[0].category : "Food";
+      scatterData.push({ x: roundedX, y: roundedY, category: firstCategory });
       renderScatterplot();
     }
   },
@@ -42,15 +44,90 @@ const functionsMapScatter = {
     alert("removeCategoryColor called – implement as needed.");
   },
   scatterChangePointLoc: function(data) {
-    if (data.index !== undefined && scatterData[data.index]) {
-      scatterData[data.index].x = Math.round(data.x);
-      scatterData[data.index].y = Math.round(data.y);
+    const { index, x, y, deltaX, deltaY, isPreview, isFinalUpdate, eventX, eventY, xScale, yScale } = data;
+    
+    if (!scatterData[index]) return;
+    
+    // Store original position before preview updates
+    if (isPreview && !scatterData[index]._originalPos) {
+      scatterData[index]._originalPos = {
+        x: scatterData[index].x,
+        y: scatterData[index].y
+      };
+    }
+    
+    // If we have direct screen coordinates, use them to calculate new position
+    if (eventX !== undefined && eventY !== undefined && xScale && yScale) {
+      // Convert screen coordinates to data values
+      const newX = xScale.invert(eventX);
+      const newY = yScale.invert(eventY);
+      
+      // Round values
+      scatterData[index].x = Math.round(newX);
+      scatterData[index].y = Math.round(newY);
+    }
+    // Otherwise use delta movement if available
+    else if (isPreview && deltaX !== undefined && deltaY !== undefined) {
+      // For preview during drag, calculate new position based on drag distance
+      const scaleFactor = 0.5; // Adjust movement sensitivity
+      scatterData[index].x = Math.round(scatterData[index]._originalPos.x + deltaX * scaleFactor);
+      scatterData[index].y = Math.round(scatterData[index]._originalPos.y - deltaY * scaleFactor); // Invert Y as screen coords are inverted
+    } 
+    // For final updates, just keep current position but clean up
+    else if (isFinalUpdate) {
+      delete scatterData[index]._originalPos;
+    }
+    // For direct value setting
+    else if (x !== undefined && y !== undefined) {
+      scatterData[index].x = Math.round(x);
+      scatterData[index].y = Math.round(y);
+      delete scatterData[index]._originalPos;
+    }
+    
+    renderScatterplot();
+  },
+  scatterChangeStart: function(data) {
+    // This function marks the start of a change operation
+    const { index } = data;
+    
+    if (scatterData[index]) {
+      // Store the starting position
+      scatterData[index]._changeStartPos = {
+        x: scatterData[index].x,
+        y: scatterData[index].y
+      };
+    }
+  },
+  scatterChangeEnd: function(data) {
+    // This function completes a change operation using the stored start value
+    const { index, eventX, eventY, xScale, yScale } = data;
+    
+    if (scatterData[index] && eventX !== undefined && eventY !== undefined && 
+        xScale && yScale && scatterData[index]._changeStartPos) {
+      // Convert screen coordinates to data values
+      const newX = xScale.invert(eventX);
+      const newY = yScale.invert(eventY);
+      
+      // Round values
+      scatterData[index].x = Math.round(newX);
+      scatterData[index].y = Math.round(newY);
+      
+      // Clean up
+      delete scatterData[index]._changeStartPos;
+      
       renderScatterplot();
     }
   },
   scatterChangePointColor: function(data) {
     if (data.index !== undefined && scatterData[data.index]) {
-      scatterData[data.index].category = data.newCategory;
+      // Get all unique categories
+      const categories = [...new Set(scatterData.map(d => d.category))];
+      // Find current category index
+      const currentIndex = categories.indexOf(scatterData[data.index].category);
+      // Cycle to next category (or back to first if at the end)
+      const nextIndex = (currentIndex + 1) % categories.length;
+      // Update the category
+      scatterData[data.index].category = categories[nextIndex];
       renderScatterplot();
     }
   }
