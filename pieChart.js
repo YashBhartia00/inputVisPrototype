@@ -4,7 +4,7 @@ import { addHammerEvents, clearChart, pastelColors, borderColors } from './app.j
  * Pie Chart Data
  **************************************************/
 
-// Pie Chart: Tracking meal portions by week (in mg)
+
 let pieData = [
   { task: "Protein", value: 200 },
   { task: "Carbs", value: 300 },
@@ -22,16 +22,16 @@ const functionsMapPie = {
     const slice = pieData.find(d => d.task === task);
     
     if (slice) {
-      // Store original value before preview updates
+      
       if (isPreview && !slice._originalValue) {
         slice._originalValue = slice.value;
       }
       
       if (isPreview) {
-        // For preview, restore original and add current amount
+        
         slice.value = slice._originalValue + Math.round(amount);
       } else {
-        // For final update, add amount and clear stored original
+        
         slice.value += Math.round(amount);
         delete slice._originalValue;
       }
@@ -44,16 +44,16 @@ const functionsMapPie = {
     const slice = pieData.find(d => d.task === task);
     
     if (slice) {
-      // Store original value before preview updates
+      
       if (isPreview && !slice._originalValue) {
         slice._originalValue = slice.value;
       }
       
       if (isPreview) {
-        // For preview, restore original and subtract current amount
+        
         slice.value = Math.max(0, slice._originalValue - Math.round(amount));
       } else {
-        // For final update, subtract amount and clear stored original
+        
         slice.value = Math.max(0, slice.value - Math.round(amount));
         delete slice._originalValue;
       }
@@ -68,11 +68,14 @@ const functionsMapPie = {
       const newVal = parseInt(prompt(`Change value for ${task}:`),10);
       if (!isNaN(newVal)) { slice.value = Math.round(newVal); renderPieChart(); }
     }
-  },
-  pieAddSection: function(data) {
-    const { task, initialValue } = data;
-    if (!pieData.some(d => d.task === task)) {
-      pieData.push({ task: task, value: Math.round(initialValue) });
+  },  pieAddSection: function(data) {
+    
+    const sectionName = prompt("Enter name for new section:", "New Section");
+    
+    
+    if (sectionName) {
+      
+      pieData.push({ task: sectionName, value: 1 });
       renderPieChart();
     }
   },
@@ -103,14 +106,14 @@ function renderPieChart() {
     .attr("fill", "#f9f9f9")
     .lower();
   
-  // Add a little more room around the pie chart
+  
   const radius = Math.min(600, 500) / 2 - 25;
   const pie = d3.pie().value(d => d.value);
   const arc = d3.arc().innerRadius(0).outerRadius(radius);
-  // Slightly smaller arc for positioning text
+  
   const labelArc = d3.arc().innerRadius(radius * 0.5).outerRadius(radius * 0.5);
   
-  // Calculate total for percentages
+  
   const total = pieData.reduce((sum, d) => sum + d.value, 0);
   
   const arcs = svg.selectAll("g.slice")
@@ -130,20 +133,20 @@ function renderPieChart() {
       addHammerEvents(this, { task: d.data.task, amount: 5 }, "sectionArea");
     });
   
-  // Add labels inside each pie section - make them non-interactive with pointer-events-none
+  
   arcs.append("text")
     .attr("transform", d => `translate(${labelArc.centroid(d)})`)
     .attr("text-anchor", "middle")
     .attr("font-size", "12px")
     .attr("font-weight", "bold")
     .attr("fill", "white")
-    .attr("class", "pointer-events-none") // Make labels pass through to pie sections
+    .attr("class", "pointer-events-none") 
     .text(d => {
       const percent = Math.round((d.data.value / total) * 100);
       return `${Math.round(d.data.value)} (${percent}%)`;
     });
   
-  // Legend for pie chart with non-interactive labels
+  
   const legend = svg.append("g")
     .attr("transform", "translate(10,30)");
   pieData.forEach((d, i) => {
@@ -155,7 +158,7 @@ function renderPieChart() {
     g.append("text")
       .attr("x", 18)
       .attr("y", 10)
-      .attr("class", "pointer-events-none") // Make labels pass through
+      .attr("class", "pointer-events-none") 
       .text(d.task);
   });
   

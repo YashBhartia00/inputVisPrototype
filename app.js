@@ -2,13 +2,13 @@
  * Global Variables and Gesture Options
  **************************************************/
 
-// All available gestures
+
 const allGestures = ["tap", "double tap", "hold", "pan", "pinch in", "pinch out", "swipe left", "swipe right"];
 
-// Global chart type (default: bar)
+
 let currentChartType = "bar";
 
-// Chart configuration per your explanation
+
 const chartConfig = {
   bar: {
     functions: ["barAddToBar", "barRemoveFromBar", "barChangeBar", "barAddBar", "barRemoveBar", "barMergeBars", "barReorderBar"],
@@ -32,7 +32,7 @@ const chartConfig = {
   }
 };
 
-// Default color schemes (pastel colors)
+
 const pastelColors = [
   'var(--pastel-blue)', 
   'var(--pastel-red)', 
@@ -44,16 +44,16 @@ const pastelColors = [
   'var(--pastel-teal)'
 ];
 
-// Darker border colors for pastel colors
+
 const borderColors = [
-  '#80b0c6', // darker blue
-  '#d88aa7', // darker red
-  '#95c780', // darker green
-  '#d9c060', // darker yellow
-  '#b3a0d9', // darker purple
-  '#d9a764', // darker orange
-  '#df9699', // darker pink
-  '#8dc1c5'  // darker teal
+  '#80b0c6', 
+  '#d88aa7', 
+  '#95c780', 
+  '#d9c060', 
+  '#b3a0d9', 
+  '#d9a764', 
+  '#df9699', 
+  '#8dc1c5'  
 ];
 
 /**************************************************
@@ -69,7 +69,7 @@ import { scatterData, functionsMapScatter, renderScatterplot } from './scatterpl
  * Local Storage Functions for Data Persistence
  **************************************************/
 
-// Save current chart data to localStorage
+
 function saveChartData() {
   const dataToSave = {
     bar: barData,
@@ -82,15 +82,15 @@ function saveChartData() {
   localStorage.setItem('inputviz_chart_data', JSON.stringify(dataToSave));
 }
 
-// Load chart data from localStorage
+
 function loadChartData() {
   const savedData = localStorage.getItem('inputviz_chart_data');
   if (savedData) {
     const parsedData = JSON.parse(savedData);
     
-    // Only overwrite if there's actual data
+    
     if (parsedData.bar && parsedData.bar.length > 0) {
-      // Clear existing arrays and copy saved data
+      
       barData.length = 0;
       parsedData.bar.forEach(item => barData.push(item));
     }
@@ -117,7 +117,7 @@ function loadChartData() {
   }
 }
 
-// Save gesture assignments to localStorage
+
 function saveGestureAssignments() {
   const assignments = {};
   
@@ -141,7 +141,7 @@ function saveGestureAssignments() {
   localStorage.setItem('inputviz_gesture_assignments', JSON.stringify(assignments));
 }
 
-// Get saved gesture assignment
+
 function getSavedGestureAssignment(fnName, part) {
   const saved = localStorage.getItem('inputviz_gesture_assignments');
   if (saved) {
@@ -155,7 +155,7 @@ function getSavedGestureAssignment(fnName, part) {
   return null;
 }
 
-// Load gesture assignments from localStorage
+
 function loadGestureAssignments() {
   const saved = localStorage.getItem('inputviz_gesture_assignments');
   if (saved) {
@@ -172,7 +172,7 @@ function loadGestureAssignments() {
         });
       });
       
-      // Update column selects after loading
+      
       chartConfig[currentChartType].parts.forEach(part => {
         updateColumnSelects(part);
       });
@@ -180,28 +180,28 @@ function loadGestureAssignments() {
   }
 }
 
-// Reset all data to defaults
+
 function resetAllData() {
   if (confirm("This will reset all chart data and gesture assignments to defaults. Continue?")) {
     localStorage.removeItem('inputviz_chart_data');
     localStorage.removeItem('inputviz_gesture_assignments');
     
-    // Reset to default datasets
+    
     resetChartData();
     
-    // Redraw the current chart
+    
     renderCurrentChart();
     
-    // Reset all dropdowns
+    
     createDropdownMatrix();
     
     alert("All data has been reset to defaults.");
   }
 }
 
-// Reset chart data to defaults
+
 function resetChartData() {
-  // Bar Chart - reset to defaults
+  
   barData.length = 0;
   [
     { subject: "Fantasy", time: 12 },
@@ -210,7 +210,7 @@ function resetChartData() {
     { subject: "Non-fiction", time: 10 }
   ].forEach(item => barData.push(item));
   
-  // Pie Chart - reset to defaults
+  
   pieData.length = 0;
   [
     { task: "snacks", value: 2 },
@@ -219,7 +219,7 @@ function resetChartData() {
     { task: "outside", value: 5 }
   ].forEach(item => pieData.push(item));
   
-  // Line Chart - reset to defaults
+  
   lineData.length = 0;
   [
     { day: 1, height: 10 },
@@ -229,7 +229,7 @@ function resetChartData() {
     { day: 5, height: 20 }
   ].forEach(item => lineData.push(item));
   
-  // Heatmap - reset to defaults
+  
   heatmapData.length = 0;
   [
     [30, 45, 20, 15],
@@ -241,7 +241,7 @@ function resetChartData() {
     [20, 30, 25, 15]
   ].forEach(row => heatmapData.push(row));
   
-  // Scatterplot - reset to defaults
+  
   scatterData.length = 0;
   [
     { x: 2, y: 15, category: "Food" },
@@ -257,56 +257,56 @@ function resetChartData() {
 function createDropdownMatrix() {
   const config = chartConfig[currentChartType];
   const container = d3.select("#dropdown-matrix-container");
-  container.html(""); // Clear previous matrix
+  container.html(""); 
 
-  // Add title for the matrix
+  
   container.append("h3").text("Gesture Assignments");
 
   const table = container.append("table").attr("class", "dropdown-matrix");
   const thead = table.append("thead").append("tr");
-  thead.append("th").text(""); // Top-left empty cell
+  thead.append("th").text(""); 
 
-  // Create column headers (one for each interactive part)
+  
   config.parts.forEach(part => {
     thead.append("th").text(part);
   });
 
-  // Create one row for each function
+  
   const tbody = table.append("tbody");
   config.functions.forEach(fnName => {
     const row = tbody.append("tr");
     row.append("th").text(fnName);
     config.parts.forEach(part => {
       const cell = row.append("td");
-      // Create select with a name attribute for identification.
+      
       const select = cell.append("select")
         .attr("name", `${fnName}-${part}`);
-      // Add a default "select" option.
+      
       select.append("option").attr("value", "select").text("select");
-      // Then add gesture options.
+      
       allGestures.forEach(gesture => {
         select.append("option").attr("value", gesture).text(gesture);
       });
-      // When changed, update all dropdowns for that part.
+      
       select.on("change", function() {
         updateColumnSelects(part);
-        saveGestureAssignments(); // Save when changed
+        saveGestureAssignments(); 
       });
       
-      // Load previously saved assignments if they exist
+      
       const savedValue = getSavedGestureAssignment(fnName, part);
       if (savedValue && savedValue !== "select") {
         select.node().value = savedValue;
       }
     });
   });
-  // Enforce uniqueness per column.
+  
   chartConfig[currentChartType].parts.forEach(part => {
     updateColumnSelects(part);
   });
 }
 
-// Updates dropdowns for a given interactive part so that each gesture is only available once.
+
 function updateColumnSelects(part) {
   const selects = d3.selectAll(`select[name$="-${part}"]`).nodes();
   selects.forEach(select => {
@@ -324,7 +324,7 @@ function updateColumnSelects(part) {
           .text(gesture);
       }
     });
-    // Restore current value if available.
+    
     if (d3.select(select).select(`option[value="${current}"]`).empty()) {
       select.value = "select";
     } else {
@@ -333,7 +333,7 @@ function updateColumnSelects(part) {
   });
 }
 
-// Get the selected gesture for a given function and part.
+
 function getSelectedGesture(fnName, part) {
   const sel = d3.select(`select[name="${fnName}-${part}"]`).node();
   return sel ? sel.value : "select";
@@ -344,7 +344,7 @@ function getSelectedGesture(fnName, part) {
  **************************************************/
 
 function triggerFunction(part, eventType, data) {
-  // Do not trigger anything if the dropdown is still "select".
+  
   const config = chartConfig[currentChartType];
   config.functions.forEach(fnName => {
     const assignedGesture = getSelectedGesture(fnName, part);
@@ -352,7 +352,7 @@ function triggerFunction(part, eventType, data) {
     if (assignedGesture === eventType) {
       if (functionsMap[fnName]) {
         functionsMap[fnName](data);
-        // After any data change, save to localStorage
+        
         saveChartData();
       }
     }
@@ -364,7 +364,7 @@ function triggerFunction(part, eventType, data) {
  * recognizeWith and requireFailure, plus pan/pinch etc.
  **************************************************/
 
-// Store interaction data (start values, etc.)
+
 const interactionState = {};
 
 function addHammerEvents(element, data, part) {
@@ -380,10 +380,10 @@ function addHammerEvents(element, data, part) {
   doubleTap.recognizeWith(tap);
   tap.requireFailure(doubleTap);
   
-  // Create a unique ID for this element's interactions
+  
   const elementId = Math.random().toString(36).substring(2, 15);
   
-  // Helper function to get chart-relative coordinates
+  
   function getChartCoordinates(ev) {
     const chartContainer = document.getElementById("chart-container");
     const chartRect = chartContainer.getBoundingClientRect();
@@ -394,9 +394,9 @@ function addHammerEvents(element, data, part) {
   }
   
   manager.on("tap", function(ev) {
-    // Get coordinates relative to chart container
+    
     const coords = getChartCoordinates(ev);
-    // Add coordinates to the data for all gesture types
+    
     triggerFunction(part, "tap", { ...data, ...coords });
   });
   
@@ -410,14 +410,14 @@ function addHammerEvents(element, data, part) {
     triggerFunction(part, "hold", { ...data, ...coords });
   });
   
-  // Pan handling with continuous updates during the interaction
+  
   manager.on("panstart", function(ev) {
-    // Store initial state
+    
     interactionState[elementId] = {
       startX: ev.center.x,
       startY: ev.center.y,
       startData: {...data},
-      lastUpdateDelta: 0  // Track last update to avoid excessive renders
+      lastUpdateDelta: 0  
     };
   });
   
@@ -426,38 +426,38 @@ function addHammerEvents(element, data, part) {
     const chartContainer = document.getElementById("chart-container");
     const chartRect = chartContainer.getBoundingClientRect();
 
-    // Adjust for chart container offset
+    
     const deltaX = ev.center.x - interactionState[elementId].startX;
     const deltaY = ev.center.y - interactionState[elementId].startY;
 
-    const chartX = ev.center.x - chartRect.left; // X position relative to chart
-    const chartY = ev.center.y - chartRect.top;  // Y position relative to chart
+    const chartX = ev.center.x - chartRect.left; 
+    const chartY = ev.center.y - chartRect.top;  
 
-    // Calculate change based on distance
+    
     const distance = Math.sqrt(deltaX * deltaX + deltaY * deltaY);
-    var direction = deltaY > 0 ? 1 : -1; // Positive for down, negative for up
-    if(deltaY < 30) direction = deltaX > 0 ? -1 : 1; // Horizontal pan
-    const amount = Math.round(distance / 10) * direction; // Scale by distance, 10px = 1 unit
+    var direction = deltaY > 0 ? 1 : -1; 
+    if(deltaY < 30) direction = deltaX > 0 ? -1 : 1; 
+    const amount = Math.round(distance / 10) * direction; 
 
-    // Only update if the amount changed to avoid excessive renders
+    
     if (amount !== interactionState[elementId].lastUpdateDelta) {
-      // Prepare data with current values for visualization
+      
       const updatedData = {
         ...interactionState[elementId].startData,
         deltaX,
         deltaY,
         amount: amount,
         distance,
-        isPreview: true,  // Flag that this is a preview update
-        eventX: chartX,   // Adjusted X position in chart space
-        eventY: chartY,   // Adjusted Y position in chart space
-        yPosition: chartY // Adjusted Y position for line/bar charts
+        isPreview: true,  
+        eventX: chartX,   
+        eventY: chartY,   
+        yPosition: chartY 
       };
 
-      // Trigger the function with current values for visual feedback
+      
       triggerFunction(part, "pan", updatedData);
 
-      // Store this update amount
+      
       interactionState[elementId].lastUpdateDelta = amount;
       }
     }
@@ -468,41 +468,41 @@ function addHammerEvents(element, data, part) {
     const chartContainer = document.getElementById("chart-container");
     const chartRect = chartContainer.getBoundingClientRect();
 
-    // Adjust for chart container offset
+    
     const deltaX = ev.center.x - interactionState[elementId].startX;
     const deltaY = ev.center.y - interactionState[elementId].startY;
 
-    const chartX = ev.center.x - chartRect.left; // X position relative to chart
-    const chartY = ev.center.y - chartRect.top;  // Y position relative to chart
+    const chartX = ev.center.x - chartRect.left; 
+    const chartY = ev.center.y - chartRect.top;  
 
-    // Calculate change based on distance
+    
     const distance = Math.sqrt(deltaX * deltaX + deltaY * deltaY);
-    const direction = deltaY > 0 ? 1 : -1; // Positive for down, negative for up
-    const amount = Math.round(distance / 10) * direction; // Scale by distance, 10px = 1 unit
+    const direction = deltaY > 0 ? 1 : -1; 
+    const amount = Math.round(distance / 10) * direction; 
 
-    // Prepare data with current values for final update
+    
     const updatedData = {
       ...interactionState[elementId].startData,
       deltaX,
       deltaY,
       amount: amount,
       distance,
-      isPreview: false,  // Final update
-      isFinalUpdate: true, // Flag to indicate this is the final update
-      eventX: chartX,   // Adjusted X position in chart space
-      eventY: chartY,   // Adjusted Y position in chart space
-      yPosition: chartY // Adjusted Y position for line/bar charts
+      isPreview: false,  
+      isFinalUpdate: true, 
+      eventX: chartX,   
+      eventY: chartY,   
+      yPosition: chartY 
     };
 
-    // Trigger the function with current values for final update
+    
     triggerFunction(part, "pan", updatedData);
     
-    // Clean up
+    
     delete interactionState[elementId];
     }
   });
   
-  // Pinch handling with continuous updates
+  
   manager.on("pinchstart", function(ev) {
     const coords = getChartCoordinates(ev);
     interactionState[elementId] = {
@@ -516,21 +516,21 @@ function addHammerEvents(element, data, part) {
     if (interactionState[elementId]) {
       const coords = getChartCoordinates(ev);
       const scaleChange = ev.scale - interactionState[elementId].startScale;
-      const scaleFactor = Math.abs(scaleChange) * 10; // Scale by a factor
+      const scaleFactor = Math.abs(scaleChange) * 10; 
       const amount = Math.round(scaleFactor) * (scaleChange > 0 ? 1 : -1);
       
-      // Only update if the scale changed significantly to avoid excessive renders
+      
       if (Math.abs(amount - interactionState[elementId].lastUpdateScale) >= 1) {
-        // Prepare data with current values for visualization
+        
         const updatedData = {
           ...interactionState[elementId].startData, 
           ...coords,
           scaleChange,
           amount: amount,
-          isPreview: true  // Flag that this is a preview update
+          isPreview: true  
         };
         
-        // Trigger the appropriate function based on pinch direction
+        
         if (ev.scale < 1) {
           triggerFunction(part, "pinch in", updatedData);
         } else if (ev.scale > 1) {
@@ -539,7 +539,7 @@ function addHammerEvents(element, data, part) {
           triggerFunction(part, "pinch", updatedData);
         }
         
-        // Store this update scale
+        
         interactionState[elementId].lastUpdateScale = amount;
       }
     }
@@ -549,19 +549,19 @@ function addHammerEvents(element, data, part) {
     if (interactionState[elementId]) {
       const coords = getChartCoordinates(ev);
       const scaleChange = ev.scale - interactionState[elementId].startScale;
-      const scaleFactor = Math.abs(scaleChange) * 10; // Scale by a factor
+      const scaleFactor = Math.abs(scaleChange) * 10; 
       
-      // Prepare data with original values plus calculated changes
+      
       const updatedData = {
         ...interactionState[elementId].startData, 
         ...coords,
         scaleChange,
         amount: Math.round(scaleFactor) * (scaleChange > 0 ? 1 : -1),
-        isPreview: false, // Final update, not a preview
-        isFinalUpdate: true // Flag to indicate this is the final update
+        isPreview: false, 
+        isFinalUpdate: true 
       };
       
-      // Trigger the appropriate function based on pinch direction
+      
       if (ev.scale < 1) {
         triggerFunction(part, "pinch in", updatedData);
       } else if (ev.scale > 1) {
@@ -570,7 +570,7 @@ function addHammerEvents(element, data, part) {
         triggerFunction(part, "pinch", updatedData);
       }
       
-      // Clean up
+      
       delete interactionState[elementId];
     }
   });
@@ -612,7 +612,7 @@ function clearChart() {
  **************************************************/
 
 function initModalHandlers() {
-  // Open modal on settings button click
+  
   const settingsBtn = document.getElementById('settings-btn');
   const modal = document.getElementById('settings-modal');
   const closeModal = document.querySelector('.close-modal');
@@ -637,7 +637,7 @@ function initModalHandlers() {
   
   resetBtn.addEventListener('click', resetAllData);
   
-  // Close modal if clicking outside of modal content
+  
   window.addEventListener('click', (e) => {
     if (e.target === modal) {
       modal.style.display = 'none';
@@ -674,23 +674,23 @@ function renderCurrentChart() {
  **************************************************/
 
 function initializeLayout() {
-  // Clear any existing content first
+  
   d3.select("body").selectAll(".layout-container").remove();
   
-  // Create a flex container for side-by-side layout
+  
   const content = d3.select("body")
     .append("div")
     .attr("class", "layout-container");
   
-  // Create chart container (LEFT)
+  
   content.append("div")
     .attr("id", "chart-container")
     .attr("class", "chart-area");
   
-  // Create dropdown matrix container (RIGHT)
-  // content.append("div")
-  //   .attr("id", "dropdown-matrix-container")
-  //   .attr("class", "controls-area");
+  
+  
+  
+  
 }
 
 /**************************************************
@@ -723,7 +723,7 @@ document.addEventListener('DOMContentLoaded', function() {
     renderScatterplot();
   });
   
-  // Initialize the app
+  
   loadChartData();
   initModalHandlers();
   renderCurrentChart();
@@ -744,7 +744,7 @@ export {
  * Initial Render
  **************************************************/
 
-// Initialize layout first
+
 initializeLayout();
 createDropdownMatrix();
 renderBarChart();

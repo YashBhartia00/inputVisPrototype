@@ -4,7 +4,7 @@ import { addHammerEvents, clearChart } from './app.js';
  * Heatmap Data
  **************************************************/
 
-// Heatmap: Time allocation (e.g., minutes spent on activities per day)
+
 let heatmapData = [
   [30, 45, 20, 15],
   [25, 50, 35, 10],
@@ -23,21 +23,21 @@ const functionsMapHeatmap = {
   heatmapAddTime: function(data) {
     const { row, col, amount, isPreview } = data;
     
-    //make amount absolute
+    
     var newAmount = Math.abs(amount);
     newAmount = Math.round(-amount);
     
     if (heatmapData[row] && typeof heatmapData[row][col] === "number") {
-      // Store original value before preview updates
+      
       if (isPreview && !heatmapData[row]._originalValues) {
         heatmapData[row]._originalValues = [...heatmapData[row]];
       }
       
       if (isPreview) {
-        // For preview, restore original and add current amount
+        
         heatmapData[row][col] = heatmapData[row]._originalValues[col] + Math.round(newAmount);
       } else {
-        // For final update, add amount and clear stored original
+        
         heatmapData[row][col] += Math.round(newAmount);
         delete heatmapData[row]._originalValues;
       }
@@ -48,20 +48,20 @@ const functionsMapHeatmap = {
   heatmapRemoveTime: function(data) {
     const { row, col, amount, isPreview } = data;
 
-    newAmount = Math.abs(amount); // Make amount absolute
+    newAmount = Math.abs(amount); 
     newAmount = -amount;
     
     if (heatmapData[row] && typeof heatmapData[row][col] === "number") {
-      // Store original value before preview updates
+      
       if (isPreview && !heatmapData[row]._originalValues) {
         heatmapData[row]._originalValues = [...heatmapData[row]];
       }
       
       if (isPreview) {
-        // For preview, restore original and subtract current amount
+        
         heatmapData[row][col] = Math.max(0, heatmapData[row]._originalValues[col] - Math.round(newAmount));
       } else {
-        // For final update, subtract amount and clear stored original
+        
         heatmapData[row][col] = Math.max(0, heatmapData[row][col] - Math.round(newAmount));
         delete heatmapData[row]._originalValues;
       }
@@ -73,19 +73,19 @@ const functionsMapHeatmap = {
     const { row, col, eventX, eventY, xScale, yScale, isPreview } = data;
 
     if (heatmapData[row] && typeof heatmapData[row][col] === "number") {
-      // Convert screen coordinates to data values
+      
       const newValue = Math.round(yScale.invert(eventY));
 
-      // Store original value before preview updates
+      
       if (isPreview && !heatmapData[row]._originalValues) {
         heatmapData[row]._originalValues = [...heatmapData[row]];
       }
 
       if (isPreview) {
-        // For preview, restore original and set to the new value
+        
         heatmapData[row][col] = newValue;
       } else {
-        // For final update, set to the new value and clear stored original
+        
         heatmapData[row][col] = newValue;
         delete heatmapData[row]._originalValues;
       }
@@ -124,23 +124,23 @@ function renderHeatmap() {
     .attr("fill", "#f9f9f9")
     .lower();
   
-  // Increase the left margin to accommodate row labels
+  
   const leftMargin = 70;
-  // Reduce the width to make space for color legend
+  
   const cellSize = 60;
   const numRows = heatmapData.length;
   const numCols = heatmapData[0].length;
-    // Calculate the width needed for the main chart
+    
   const chartWidth = cellSize * numCols;
-  // Create blue-red gradient scale (reversed from red-blue)
+  
   const colorScale = d3.scaleSequential()
     .domain([0, d3.max(heatmapData.flat()) + 1])
-    .interpolator(t => d3.interpolateRdBu(1 - t)); // Blue-red gradient (reversed)
+    .interpolator(t => d3.interpolateLab("white", "purple")(t)); 
   
-  // Render cells.
+  
   for(let i = 0; i < numRows; i++){
     for(let j = 0; j < numCols; j++){
-      // Cell rectangle
+      
       svg.append("rect")
         .attr("class", "cell")
         .attr("x", leftMargin + j * cellSize)
@@ -156,7 +156,7 @@ function renderHeatmap() {
           addHammerEvents(this, { row: i, col: j, amount: 15 }, "cell");
         });
         
-      // Add cell value text with pointer-events-none to allow interaction with cell
+      
       svg.append("text")
         .attr("class", "cell-label pointer-events-none")
         .attr("x", leftMargin + j * cellSize + cellSize/2)
@@ -166,11 +166,11 @@ function renderHeatmap() {
         .attr("fill", heatmapData[i][j] > 30 ? "white" : "black")
         .attr("font-size", "14px")
         .attr("font-weight", "bold")
-        .text(Math.round(heatmapData[i][j])); // Ensure integers are displayed
+        .text(Math.round(heatmapData[i][j])); 
     }
   }
   
-  // Add row labels with pointer-events-none
+  
   const rowLabels = ["Mon", "Tue", "Wed", "Thu", "Fri", "Sat", "Sun"];
   rowLabels.forEach((d, i) => {
     svg.append("text")
@@ -183,7 +183,7 @@ function renderHeatmap() {
       .text(d);
   });
   
-  // Add column labels with pointer-events-none
+  
   const colLabels = ["Work", "Leisure", "Exercise", "Sleep"];
   colLabels.forEach((d, j) => {
     svg.append("text")
@@ -195,13 +195,13 @@ function renderHeatmap() {
       .text(d);
   });
   
-  // Add color legend
+  
   const legendWidth = 20;
   const legendHeight = 200;
   const legendX = leftMargin + chartWidth + 40;
   const legendY = 150;
   
-  // Create the gradient for the legend
+  
   const defs = svg.append("defs");
   const linearGradient = defs.append("linearGradient")
     .attr("id", "heatmap-gradient")
@@ -210,7 +210,7 @@ function renderHeatmap() {
     .attr("x2", "0%")
     .attr("y2", "0%");
     
-  // Add color stops
+  
   const maxValue = d3.max(heatmapData.flat());
   [0, 0.25, 0.5, 0.75, 1].forEach(stop => {
     linearGradient.append("stop")
@@ -218,7 +218,7 @@ function renderHeatmap() {
       .attr("stop-color", colorScale(stop * maxValue));
   });
   
-  // Draw the legend rectangle with the gradient
+  
   svg.append("rect")
     .attr("x", legendX)
     .attr("y", legendY - legendHeight / 2)
@@ -226,7 +226,7 @@ function renderHeatmap() {
     .attr("height", legendHeight)
     .attr("fill", "url(#heatmap-gradient)");
     
-  // Add legend title with pointer-events-none
+  
   svg.append("text")
     .attr("class", "legend-title pointer-events-none")
     .attr("x", legendX + legendWidth / 2)
@@ -235,13 +235,13 @@ function renderHeatmap() {
     .attr("font-weight", "bold")
     .text("Minutes");
     
-  // Add legend labels for min and max values with pointer-events-none
+  
   svg.append("text")
     .attr("class", "legend-label pointer-events-none")
     .attr("x", legendX + legendWidth + 5)
     .attr("y", legendY - legendHeight / 2)
     .attr("dominant-baseline", "middle")
-    .text(Math.round(maxValue)); // Ensure integer display
+    .text(Math.round(maxValue)); 
     
   svg.append("text")
     .attr("class", "legend-label pointer-events-none")

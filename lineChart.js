@@ -4,7 +4,7 @@ import { addHammerEvents, clearChart, triggerFunction, pastelColors, borderColor
  * Line Chart Data
  **************************************************/
 
-// Line Chart: Gardener tracking plant growth progress (cm)
+
 let lineData = [
   { day: 1, height: 10 },
   { day: 2, height: 12 },
@@ -17,19 +17,23 @@ let lineData = [
  * Line Chart Functions
  **************************************************/
 
-const functionsMapLine = {
-  lineAddPoint: function(data) {
-    // Add a new point at the next day in sequence, with height based on event location
+const functionsMapLine = {  lineAddPoint: function(data) {
+    
+    
+    if (data.isPreview) {
+      return; 
+    }
+
     const newDay = lineData.length > 0 ? Math.max(...lineData.map(d => d.day)) + 1 : 1;
-    // Convert screen y-coordinate to data height if event position is provided
-    let newHeight = 10; // Default height
+    
+    let newHeight = 10; 
     if (data.eventY !== undefined && data.yScale) {
       newHeight = data.yScale.invert(data.eventY);
-      // Round to nearest whole number for cleaner data
+      
       newHeight = Math.round(newHeight);
-      // Ensure height is not negative
+      
       newHeight = Math.max(0, newHeight);
-      // Add the point with the calculated height
+      
       lineData.push({ day: newDay, height: newHeight });
       renderLineChart();
     } else {
@@ -46,16 +50,16 @@ const functionsMapLine = {
     const point = lineData.find(d => d.day === day);
     
     if (point) {
-      // Store original value before preview updates
+      
       if (isPreview && !point._originalHeight) {
         point._originalHeight = point.height;
       }
       
       if (isPreview) {
-        // For preview, restore original and add current amount
+        
         point.height = point._originalHeight + Math.round(amount);
       } else {
-        // For final update, add amount and clear stored original
+        
         point.height += Math.round(amount);
         delete point._originalHeight;
       }
@@ -68,16 +72,16 @@ const functionsMapLine = {
     const point = lineData.find(d => d.day === day);
     
     if (point) {
-      // Store original value before preview updates
+      
       if (isPreview && !point._originalHeight) {
         point._originalHeight = point.height;
       }
       
       if (isPreview) {
-        // For preview, restore original and subtract current amount
+        
         point.height = Math.max(0, point._originalHeight - Math.round(amount));
       } else {
-        // For final update, subtract amount and clear stored original
+        
         point.height = Math.max(0, point.height - Math.round(amount));
         delete point._originalHeight;
       }
@@ -90,25 +94,25 @@ const functionsMapLine = {
     const point = lineData.find(d => d.day === day);
     
     if (point && yPosition !== undefined && yScale) {
-      // Convert screen y coordinate to data height
+      
       let newHeight = yScale.invert(yPosition);
       
-      // Round to nearest whole number and ensure it's not negative
+      
       newHeight = Math.max(0, Math.round(newHeight));
       
-      // Store original height before preview updates
+      
       if (isPreview && !point._originalHeight) {
         point._originalHeight = point.height;
       }
       
       if (isPreview) {
-        // For preview during drag, update to the position
+        
         point.height = newHeight;
       } else if (isFinalUpdate) {
-        // For final update, just keep the current value (already updated in preview)
+        
         delete point._originalHeight;
       } else {
-        // For explicit value setting, update the height directly
+        
         point.height = newHeight;
       }
       
@@ -116,31 +120,31 @@ const functionsMapLine = {
     }
   },
   lineChangeStart: function(data) {
-    // This function marks the start of a change operation
+    
     const { day } = data;
     const point = lineData.find(d => d.day === day);
     
     if (point) {
-      // Store the starting height
+      
       point._changeStartHeight = point.height;
     }
   },
   lineChangeEnd: function(data) {
-    // This function completes a change operation using the stored start value
+    
     const { day, yPosition, yScale } = data;
     const point = lineData.find(d => d.day === day);
     
     if (point && yPosition !== undefined && yScale && point._changeStartHeight !== undefined) {
-      // Convert screen y coordinate to data height
+      
       let newHeight = yScale.invert(yPosition);
       
-      // Round to nearest whole number and ensure it's not negative
+      
       newHeight = Math.max(0, Math.round(newHeight));
       
-      // Update to final height
+      
       point.height = newHeight;
       
-      // Clean up
+      
       delete point._changeStartHeight;
       
       renderLineChart();
@@ -191,7 +195,7 @@ function renderLineChart() {
     .x(d => xScale(d.day))
     .y(d => yScale(d.height));
   
-  // Add the path for the line
+  
   svg.append("path")
     .datum(lineData)
     .attr("d", lineGenerator)
@@ -202,37 +206,37 @@ function renderLineChart() {
       addHammerEvents(this, {}, "line");
     });
   
-  // Create a group for each data point
+  
   const points = svg.selectAll("g.point")
     .data(lineData)
     .enter()
     .append("g")
     .attr("class", "point-group");
   
-  // Add larger invisible circles for better interaction (touch target area)
+  
   points.append("circle")
     .attr("class", "point-interaction")
     .attr("cx", d => xScale(d.day))
     .attr("cy", d => yScale(d.height))
-    .attr("r", 15) // Larger radius for easier interaction
-    .attr("fill", "transparent") // Invisible but interactive
+    .attr("r", 15) 
+    .attr("fill", "transparent") 
     .attr("stroke", "rgba(0,0,0,0.1)")
     .attr("stroke-width", 1)
     .each(function(d) {
       addHammerEvents(this, { day: d.day, amount: 1, yScale: yScale }, "point");
     });
   
-  // Add visible points but without direct events (they'll be handled by the larger circles)
+  
   points.append("circle")
     .attr("class", "point pointer-events-none")
     .attr("cx", d => xScale(d.day))
     .attr("cy", d => yScale(d.height))
-    .attr("r", 5) // Visible point size remains small
+    .attr("r", 5) 
     .attr("fill", pastelColors[1])
     .attr("stroke", borderColors[1])
     .attr("stroke-width", 2);
   
-  // Add point labels (show actual values)
+  
   points.append("text")
     .attr("class", "point-label pointer-events-none")
     .attr("x", d => xScale(d.day))
@@ -242,13 +246,13 @@ function renderLineChart() {
     .attr("font-weight", "bold")
     .text(d => Math.round(d.height));
   
-  // Axes and labels - with integer ticks only
+  
   const xAxis = d3.axisBottom(xScale)
-    .tickFormat(d3.format('d')) // Format as integers
+    .tickFormat(d3.format('d')) 
     .ticks(lineData.length);
     
   const yAxis = d3.axisLeft(yScale)
-    .tickFormat(d3.format('d')) // Format as integers
+    .tickFormat(d3.format('d')) 
     .ticks(5);
     
   svg.append("g")
@@ -278,11 +282,11 @@ function renderLineChart() {
   
   svg.selectAll(".chart-bg")
     .each(function() {
-      // Pass the scales so we can convert screen coordinates to data
+      
       addHammerEvents(this, { yScale: yScale }, "outsideLines");
     });
     
-  // Keep this as a fallback for native browser clicks, but coordinates will also come from HammerJS
+  
   svg.select(".chart-bg").on("click", function(event) {
     const coords = d3.pointer(event);
     const eventX = coords[0];

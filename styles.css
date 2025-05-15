@@ -1,4 +1,4 @@
-/* styles.css */
+
 body {
   font-family: Arial, sans-serif;
   margin: 0;
@@ -60,7 +60,7 @@ button:hover {
   font-size: 14px;
 }
 
-/* Bars and their interactive handles */
+
 .bar {
   cursor: pointer;
   touch-action: none;
@@ -90,7 +90,7 @@ button:hover {
   max-width: 500px;
 }
 
-/* Settings button */
+
 .settings-button {
   position: fixed;
   bottom: 20px;
@@ -113,7 +113,7 @@ button:hover {
   background-color: #3a7bcf;
 }
 
-/* Modal styles */
+
 .modal {
   display: none;
   position: fixed;
@@ -202,7 +202,7 @@ button:hover {
   pointer-events: all;
 }
 
-/* Pastel color scheme */
+
 :root {
   --pastel-blue: #a8d0e6;
   --pastel-red: #f8a5c2;

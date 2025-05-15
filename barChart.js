@@ -4,7 +4,7 @@ import { addHammerEvents, clearChart, pastelColors, borderColors } from './app.j
  * Bar Chart Data
  **************************************************/
 
-// Bar Chart: Books/movies read by genre
+
 let barData = [
   { subject: "Fantasy", time: 12 },
   { subject: "Mystery", time: 8 },
@@ -22,19 +22,19 @@ const functionsMapBar = {
     const bar = barData.find(d => d.subject === subject);
     
     if (bar) {
-      // Store original value before preview updates
+      
       if (isPreview && !bar._originalValue) {
         bar._originalValue = bar.time;
       }
       
       if (isPreview) {
-        // For preview, restore original and add current amount
+        
         bar.time = bar._originalValue + Math.round(amount);
       } else if (isFinalUpdate) {
-        // For final update, just keep the current value (already updated in preview)
+        
         delete bar._originalValue;
       } else {
-        // For normal update (not preview/final), add amount
+        
         bar.time += Math.round(amount);
       }
       
@@ -46,19 +46,19 @@ const functionsMapBar = {
     const bar = barData.find(d => d.subject === subject);
     
     if (bar) {
-      // Store original value before preview updates
+      
       if (isPreview && !bar._originalValue) {
         bar._originalValue = bar.time;
       }
       
       if (isPreview) {
-        // For preview, restore original and subtract current amount
+        
         bar.time = Math.max(0, bar._originalValue - Math.round(amount));
       } else if (isFinalUpdate) {
-        // For final update, just keep the current value (already updated in preview)
+        
         delete bar._originalValue;
       } else {
-        // For normal update (not preview/final), subtract amount
+        
         bar.time = Math.max(0, bar.time - Math.round(amount));
       }
       
@@ -72,24 +72,24 @@ const functionsMapBar = {
     const bar = barData.find(d => d.subject === subject);
     
     if (bar && yPosition !== undefined && yScale) {
-      // Convert screen y coordinate to data value
+      
       let newHeight = yScale.invert(yPosition);
       console.log("newHeight", yPosition, newHeight);
       
-      // Round to nearest whole number and ensure it's not negative
+      
       newHeight = Math.max(0, Math.round(newHeight));
       
-      // Store original value before preview updates
+      
       if (isPreview && !bar._originalValue) {
         bar._originalValue = bar.time;
         console.log("Storing original value:", bar._originalValue); 
       }
       
       if (isPreview) {
-        // For preview during drag, update to the position
+        
         bar.time = newHeight;
       } else {
-        // For final update, set to the new height and clear stored original
+        
         bar.time = newHeight;
         delete bar._originalValue;
       }
@@ -98,40 +98,43 @@ const functionsMapBar = {
     }
   },
   barChangeStart: function(data) {
-    // This function marks the start of a change operation
+    
     const { subject } = data;
     const bar = barData.find(d => d.subject === subject);
     
     if (bar) {
-      // Store the starting value
+      
       bar._changeStartValue = bar.time;
     }
   },
   barChangeEnd: function(data) {
-    // This function completes a change operation using the stored start value
+    
     const { subject, yPosition, yScale } = data;
     const bar = barData.find(d => d.subject === subject);
     
     if (bar && yPosition !== undefined && yScale && bar._changeStartValue !== undefined) {
-      // Convert screen y coordinate to data value
+      
       let newHeight = yScale.invert(yPosition);
       
-      // Round to nearest whole number and ensure it's not negative
+      
       newHeight = Math.max(0, Math.round(newHeight));
       
-      // Update to final value
+      
       bar.time = newHeight;
       
-      // Clean up
+      
       delete bar._changeStartValue;
       
       renderBarChart();
     }
-  },
-  barAddBar: function(data) {
-    const { subject, initialValue } = data;
-    if (!barData.some(d => d.subject === subject)) {
-      barData.push({ subject: subject, time: Math.round(initialValue) });
+  },  barAddBar: function(data) {
+    
+    const barName = prompt("Enter name for new bar:", "New Category");
+    
+    
+    if (barName) {
+      
+      barData.push({ subject: barName, time: 1 });
       renderBarChart();
     }
   },
@@ -159,7 +162,7 @@ function renderBarChart() {
     .attr("width", 600)
     .attr("height", 500);
   
-  // Background for outsideBars interactions.
+  
   svg.append("rect")
     .attr("class", "chart-bg")
     .attr("x", 40)
@@ -168,16 +171,15 @@ function renderBarChart() {
     .attr("height", 500 - 60)
     .attr("fill", "#f9f9f9")
     .lower();
-  
-  const xScale = d3.scaleBand()
+    const xScale = d3.scaleBand()
     .domain(barData.map(d => d.subject))
-    .range([40, 600 - 40])
+    .range([40, 600 - 80]) 
     .padding(0.1);
     const yScale = d3.scaleLinear()
     .domain([0, (d3.max(barData, d => d.time) || 20) + 1])
     .range([500 - 40, 20]);
   
-  // Draw bars (with extra handle for barTopEdge).
+  
   const groups = svg.selectAll(".bar-group")
     .data(barData, d => d.subject)
     .enter()
@@ -198,7 +200,7 @@ function renderBarChart() {
       addHammerEvents(this, { subject: d.subject, amount: 1, yScale: yScale }, "barArea");
     });
   
-  // Add value labels above each bar with passthrough events
+  
   groups.append("text")
     .attr("class", "bar-label pointer-events-none")
     .attr("x", d => xScale(d.subject) + xScale.bandwidth() / 2)
@@ -214,22 +216,22 @@ function renderBarChart() {
     const y = yScale(d.time);
     const barWidth = xScale.bandwidth();
     
-    // Extended top edge handle that covers the label area
+    
     g.append("rect")
       .attr("class", "handle top")
       .attr("x", x)
-      .attr("y", y - 20) // Extend upward to cover the label
+      .attr("y", y - 20) 
       .attr("width", barWidth)
-      .attr("height", 25) // Make taller to be easier to interact with
-      .attr("fill", "transparent") // Transparent but interactive
+      .attr("height", 25) 
+      .attr("fill", "transparent") 
       .each(function() {
         addHammerEvents(this, { subject: d.subject, amount: 1, yScale: yScale }, "barTopEdge");
       });
   });
   
-  // Axes and labels - with integer ticks only
+  
   const yAxis = d3.axisLeft(yScale)
-    .tickFormat(d3.format('d')) // Format as integers
+    .tickFormat(d3.format('d')) 
     .ticks(5);
     
   svg.append("g")
@@ -257,7 +259,7 @@ function renderBarChart() {
     .attr("text-anchor", "middle")
     .text("Number Read");
   
-  // Outside bars (background tap for adding a new bar) – only trigger if not "select".
+  
   svg.selectAll(".chart-bg")
     .each(function() {
       addHammerEvents(this, {}, "outsideBars");
