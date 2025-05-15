@@ -103,7 +103,8 @@ function renderPieChart() {
     .attr("fill", "#f9f9f9")
     .lower();
   
-  const radius = Math.min(600, 500) / 2 - 20;
+  // Add a little more room around the pie chart
+  const radius = Math.min(600, 500) / 2 - 25;
   const pie = d3.pie().value(d => d.value);
   const arc = d3.arc().innerRadius(0).outerRadius(radius);
   // Slightly smaller arc for positioning text

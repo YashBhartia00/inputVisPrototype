@@ -130,14 +130,12 @@ function renderHeatmap() {
   const cellSize = 60;
   const numRows = heatmapData.length;
   const numCols = heatmapData[0].length;
-  
-  // Calculate the width needed for the main chart
+    // Calculate the width needed for the main chart
   const chartWidth = cellSize * numCols;
-  
-  // Create pastel color scale
+  // Create blue-red gradient scale (reversed from red-blue)
   const colorScale = d3.scaleSequential()
-    .domain([0, d3.max(heatmapData.flat())])
-    .interpolator(d3.interpolateRgb("#a8d0e6", "#d3c0f9")); // Direct RGB interpolation between pastel blue and purple
+    .domain([0, d3.max(heatmapData.flat()) + 1])
+    .interpolator(t => d3.interpolateRdBu(1 - t)); // Blue-red gradient (reversed)
   
   // Render cells.
   for(let i = 0; i < numRows; i++){

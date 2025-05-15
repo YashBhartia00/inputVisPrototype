@@ -244,9 +244,9 @@ function resetChartData() {
   // Scatterplot - reset to defaults
   scatterData.length = 0;
   [
-    { x: 100, y: 150, category: "Food" },
-    { x: 200, y: 300, category: "Utilities" },
-    { x: 300, y: 200, category: "Entertainment" }
+    { x: 2, y: 15, category: "Food" },
+    { x: 4, y: 30, category: "Utilities" },
+    { x: 3, y: 20, category: "Entertainment" }
   ].forEach(item => scatterData.push(item));
 }
 

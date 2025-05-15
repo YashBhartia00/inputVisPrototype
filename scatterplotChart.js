@@ -6,11 +6,11 @@ import { addHammerEvents, clearChart, triggerFunction, pastelColors, borderColor
 
 // Scatterplot: Money spent vs money (colors indicate reasons)
 let scatterData = [
-  { x: 100, y: 150, category: "Food" },
-  { x: 200, y: 300, category: "Utilities" },
-  { x: 300, y: 200, category: "Entertainment" }
+    { x: 2, y: 15, category: "Food" },
+    { x: 4, y: 30, category: "Utilities" },
+    { x: 3, y: 20, category: "Entertainment" },
+    { x: -4, y: 30, category: "Food" },
 ];
-
 /**************************************************
  * Scatterplot Functions
  **************************************************/
@@ -156,14 +156,13 @@ function renderScatterplot() {
   // Define scales with both positive and negative values
   const xExtent = d3.extent(scatterData, d => d.x);
   const yExtent = d3.extent(scatterData, d => d.y);
-  
-  // Ensure we have both positive and negative values
-  const xMin = Math.min(-50, xExtent[0]);
-  const xMax = Math.max(50, xExtent[1]);
-  const yMin = Math.min(-50, yExtent[0]);
-  const yMax = Math.max(50, yExtent[1]);
-  const xMaxAbs = Math.max(Math.abs(xMin), Math.abs(xMax), 100);
-  const yMaxAbs = Math.max(Math.abs(yMin), Math.abs(yMax), 100);
+    // Ensure we have both positive and negative values within -5 to 5 range
+  const xMin = Math.min(-5, xExtent[0]);
+  const xMax = Math.max(5, xExtent[1]);
+  const yMin = Math.min(-5, yExtent[0]);
+  const yMax = Math.max(5, yExtent[1]);
+  const xMaxAbs = Math.max(Math.abs(xMin), Math.abs(xMax), 5);
+  const yMaxAbs = Math.max(Math.abs(yMin), Math.abs(yMax), 5);
   
   
   const xScale = d3.scaleLinear()

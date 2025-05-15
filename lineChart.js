@@ -179,13 +179,12 @@ function renderLineChart() {
     .attr("height", 500 - 60)
     .attr("fill", "#f9f9f9")
     .lower();
-  
-  const xScale = d3.scaleLinear()
+    const xScale = d3.scaleLinear()
     .domain([d3.min(lineData, d => d.day) || 0, (d3.max(lineData, d => d.day) || 10) + 1])
     .range([40, 600 - 40]);
   
   const yScale = d3.scaleLinear()
-    .domain([0, d3.max(lineData, d => d.height) || 20])
+    .domain([0, (d3.max(lineData, d => d.height) || 20) + 1])
     .range([500 - 40, 20]);
   
   const lineGenerator = d3.line()
