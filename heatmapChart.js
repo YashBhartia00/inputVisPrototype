@@ -113,7 +113,7 @@ function renderHeatmap() {
   const svg = d3.select("#chart-container")
     .append("svg")
     .attr("width", 600)
-    .attr("height", 500);
+    .attr("height", 500)
   
   svg.append("rect")
     .attr("class", "chart-bg")

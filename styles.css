@@ -32,9 +32,12 @@ button:hover {
 #chart-container {
   width: 600px;
   height: 500px;
-  border: 1px solid #ccc;
-  background: #f9f9f9;
+  background: white;
   margin-right: 20px;
+}
+
+svg {
+  outline: 1px solid black ;
 }
 
 .dropdown-matrix {
@@ -215,5 +218,5 @@ button:hover {
 }
 
 .chart-bg {
-  fill: #f9f9f9;
+  fill: white;
 }

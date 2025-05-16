@@ -370,7 +370,7 @@ const interactionState = {};
 function addHammerEvents(element, data, part) {
   const manager = new Hammer.Manager(element);
   const tap = new Hammer.Tap({ event: 'tap', taps: 1 });
-  const doubleTap = new Hammer.Tap({ event: 'doubletap', taps: 2 });
+  const doubleTap = new Hammer.Tap({ event: 'doubletap', taps: 2 , posThreshold: 50, interval: 500 });
   const press = new Hammer.Press({ event: 'press' });
   const pan = new Hammer.Pan({ event: 'pan', threshold: 0 });
   const pinch = new Hammer.Pinch({ event: 'pinch' });
@@ -686,7 +686,6 @@ function initializeLayout() {
   content.append("div")
     .attr("id", "chart-container")
     .attr("class", "chart-area");
-  
   
   
   

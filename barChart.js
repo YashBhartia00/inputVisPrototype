@@ -144,10 +144,10 @@ const functionsMapBar = {
     if (index !== -1) { barData.splice(index, 1); renderBarChart(); }
   },
   barMergeBars: function(data) {
-    alert("mergeBars called – implement merge logic.");
+    alert("mergeBars called  implement merge logic.");
   },
   barReorderBar: function(data) {
-    alert("reorderBar called – implement reorder logic.");
+    alert("reorderBar called  implement reorder logic.");
   }
 };
 
@@ -160,7 +160,8 @@ function renderBarChart() {
   const svg = d3.select("#chart-container")
     .append("svg")
     .attr("width", 600)
-    .attr("height", 500);
+    .attr("height", 500)
+    .attr("border", "20px solid black");
   
   
   svg.append("rect")
