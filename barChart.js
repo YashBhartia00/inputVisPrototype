@@ -159,7 +159,7 @@ function renderBarChart() {
   clearChart();
   const svg = d3.select("#chart-container")
     .append("svg")
-    .attr("width", 600)
+    .attr("width", 750)  // Increased width to accommodate legend
     .attr("height", 500)
     .attr("border", "20px solid black");
   
