@@ -228,17 +228,15 @@ function resetChartData() {
     { day: 4, height: 18 },
     { day: 5, height: 20 }
   ].forEach(item => lineData.push(item));
-  
-  
-  heatmapData.length = 0;
+    heatmapData.length = 0;
   [
-    [30, 45, 20, 15],
-    [25, 50, 35, 10],
-    [40, 30, 20, 10],
-    [20, 40, 25, 15],
-    [30, 35, 20, 15],
-    [25, 45, 30, 10],
-    [20, 30, 25, 15]
+    [1, 3, 0, 0],
+    [0, 2, 1, 0],
+    [3, 1, 0, 0],
+    [0, 2, 0, 0],
+    [2, 1, 0, 0],
+    [0, 3, 2, 0],
+    [0, 1, 0, 0]
   ].forEach(row => heatmapData.push(row));
   
   
@@ -433,11 +431,10 @@ function addHammerEvents(element, data, part) {
     const chartX = ev.center.x - chartRect.left; 
     const chartY = ev.center.y - chartRect.top;  
 
-    
-    const distance = Math.sqrt(deltaX * deltaX + deltaY * deltaY);
+      const distance = Math.sqrt(deltaX * deltaX + deltaY * deltaY);
     var direction = deltaY > 0 ? 1 : -1; 
     if(deltaY < 30) direction = deltaX > 0 ? -1 : 1; 
-    const amount = Math.round(distance / 10) * direction; 
+    const amount = direction; 
 
     
     if (amount !== interactionState[elementId].lastUpdateDelta) {
@@ -475,10 +472,9 @@ function addHammerEvents(element, data, part) {
     const chartX = ev.center.x - chartRect.left; 
     const chartY = ev.center.y - chartRect.top;  
 
-    
-    const distance = Math.sqrt(deltaX * deltaX + deltaY * deltaY);
+      const distance = Math.sqrt(deltaX * deltaX + deltaY * deltaY);
     const direction = deltaY > 0 ? 1 : -1; 
-    const amount = Math.round(distance / 10) * direction; 
+    const amount = direction; 
 
     
     const updatedData = {

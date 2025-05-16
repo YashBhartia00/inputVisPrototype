@@ -33,9 +33,9 @@ const functionsMapScatter = {
   },  scatterRemovePoint: function(data) {
     const { index } = data;
     
-    // Make sure we're receiving an index and it's valid
+    
     if (index !== undefined && scatterData[index]) {
-      // Remove the point at the specified index
+      
       scatterData.splice(index, 1);
       renderScatterplot();
     }
@@ -156,14 +156,14 @@ function renderScatterplot() {
   clearChart();
   const svg = d3.select("#chart-container")
     .append("svg")
-    .attr("width", 750)  // Increased width to accommodate legend outside
+    .attr("width", 750)  
     .attr("height", 500);
   
   svg.append("rect")
     .attr("class", "chart-bg")
     .attr("x", 50)
     .attr("y", 30)
-    .attr("width", 600 - 50)  // Adjusted width to maintain plot area
+    .attr("width", 600 - 50)  
     .attr("height", 500 - 80)
     .attr("fill", "#f9f9f9")
     .lower();
@@ -190,22 +190,22 @@ function renderScatterplot() {
     .range([500 - 30, 30])
     .nice(); 
   
-    // Store category colors persistently 
+    
   if (!window.categoryColorMap) {
     window.categoryColorMap = {};
   }
   
-  // Get all unique categories
+  
   const categories = [...new Set(scatterData.map(d => d.category))];
   
-  // Assign colors to any new categories
+  
   categories.forEach((category, index) => {
     if (!window.categoryColorMap[category]) {
       window.categoryColorMap[category] = pastelColors[Object.keys(window.categoryColorMap).length % pastelColors.length];
     }
   });
   
-  // Create color scale using our persistent mapping
+  
   const colorScale = d => window.categoryColorMap[d] || pastelColors[0];
   
   
@@ -259,7 +259,7 @@ function renderScatterplot() {
     .attr("stroke", "rgba(0,0,0,0.1)")
     .attr("stroke-width", 1)
     .each(function(d, i) {
-      // Pass the index properly to ensure we can identify points for removal
+      
       addHammerEvents(this, { index: i, x: d.x, y: d.y, category: d.category, xScale: xScale, yScale: yScale }, "point");
     });
   
@@ -284,7 +284,7 @@ function renderScatterplot() {
   
     const legend = svg.append("g")
     .attr("class", "legend")
-    .attr("transform", `translate(${600 + 50}, 40)`);  // Move legend outside the chart area
+    .attr("transform", `translate(${600 + 50}, 40)`);  
       categories.forEach((category, i) => {
     const legendRow = legend.append("g")
       .attr("transform", `translate(0, ${i * 20})`);

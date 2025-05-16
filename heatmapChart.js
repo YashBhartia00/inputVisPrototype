@@ -6,25 +6,24 @@ import { addHammerEvents, clearChart } from './app.js';
 
 
 let heatmapData = [
-  [30, 45, 20, 15],
-  [25, 50, 35, 10],
-  [40, 30, 20, 10],
-  [20, 40, 25, 15],
-  [30, 35, 20, 15],
-  [25, 45, 30, 10],
-  [20, 30, 25, 15]
+  [1, 3, 0, 0],
+  [0, 2, 1, 0],
+  [3, 1, 0, 0],
+  [0, 2, 0, 0],
+  [2, 1, 0, 0],
+  [0, 3, 2, 0],
+  [0, 1, 0, 0]
 ];
 
 /**************************************************
  * Heatmap Functions
  **************************************************/
 
-const functionsMapHeatmap = {
-  heatmapAddTime: function(data) {
+const functionsMapHeatmap = {  heatmapAddTime: function(data) {
     const { row, col, amount, isPreview } = data;
     
     
-    const newAmount = Math.abs(amount);
+    const newAmount = 1;
     
     if (heatmapData[row] && typeof heatmapData[row][col] === "number") {
       
@@ -33,22 +32,19 @@ const functionsMapHeatmap = {
       }
       
       if (isPreview) {
-        
-        heatmapData[row][col] = heatmapData[row]._originalValues[col] + Math.round(newAmount);
+        heatmapData[row][col] = heatmapData[row]._originalValues[col] + newAmount;
       } else {
-        
-        heatmapData[row][col] += Math.round(newAmount);
+        heatmapData[row][col] += newAmount;
         delete heatmapData[row]._originalValues;
       }
       
       renderHeatmap();
     }
-  },
-  heatmapRemoveTime: function(data) {
+  },  heatmapRemoveTime: function(data) {
     const { row, col, amount, isPreview } = data;
     
     
-    const newAmount = Math.abs(amount);
+    const newAmount = 1;
     
     if (heatmapData[row] && typeof heatmapData[row][col] === "number") {
       
@@ -57,32 +53,28 @@ const functionsMapHeatmap = {
       }
       
       if (isPreview) {
-        
-        heatmapData[row][col] = Math.max(0, heatmapData[row]._originalValues[col] - Math.round(newAmount));
+        heatmapData[row][col] = Math.max(0, heatmapData[row]._originalValues[col] - newAmount);
       } else {
-        
-        heatmapData[row][col] = Math.max(0, heatmapData[row][col] - Math.round(newAmount));
+        heatmapData[row][col] = Math.max(0, heatmapData[row][col] - newAmount);
         delete heatmapData[row]._originalValues;
       }
       
       renderHeatmap();
     }
-  },
-  heatmapChangeTime: function(data) {
+  },  heatmapChangeTime: function(data) {
     const { row, col, eventY, isPreview } = data;
 
     if (heatmapData[row] && typeof heatmapData[row][col] === "number") {
       
       const cellSize = 60;
-      const maxValue = d3.max(heatmapData.flat());
-      
-      
+      const maxValue = 4; 
       
       const cellTop = 40 + row * cellSize;
       const cellBottom = cellTop + cellSize;
       const relativeY = (cellBottom - eventY) / cellSize;
-      const newValue = Math.round(relativeY * maxValue);
       
+      
+      const newValue = Math.round(relativeY * maxValue);
       
       if (isPreview && !heatmapData[row]._originalValues) {
         heatmapData[row]._originalValues = [...heatmapData[row]];
@@ -97,10 +89,9 @@ const functionsMapHeatmap = {
 
       renderHeatmap();
     }
-  },
-  heatmapAddColumn: function(data) {
+  },  heatmapAddColumn: function(data) {
     
-    const defaultValue = 25;
+    const defaultValue = 1; 
     
     for (let i = 0; i < heatmapData.length; i++) {
       heatmapData[i].push(defaultValue);
@@ -116,13 +107,13 @@ const functionsMapHeatmap = {
       }
       renderHeatmap();
     }
-  },
-  heatmapMergeColumns: function(data) {
+  },  heatmapMergeColumns: function(data) {
     const { col } = data;
     
     
     if (col < heatmapData[0].length - 1) {
       for (let i = 0; i < heatmapData.length; i++) {
+        
         
         heatmapData[i][col] = Math.round((heatmapData[i][col] + heatmapData[i][col + 1]) / 2);
         
@@ -141,7 +132,7 @@ function renderHeatmap() {
   clearChart();
   const svg = d3.select("#chart-container")
     .append("svg")
-    .attr("width", 750)  // Increased width to accommodate legend
+    .attr("width", 750)  
     .attr("height", 500)
   
   svg.append("rect")
@@ -161,9 +152,8 @@ function renderHeatmap() {
   const numCols = heatmapData[0].length;
     
   const chartWidth = cellSize * numCols;
-  
-  const colorScale = d3.scaleSequential()
-    .domain([0, d3.max(heatmapData.flat()) + 1])
+    const colorScale = d3.scaleSequential()
+    .domain([0, 4]) 
     .interpolator(t => d3.interpolateLab("white", "purple")(t)); 
   
   
@@ -179,23 +169,21 @@ function renderHeatmap() {
         .attr("fill", colorScale(heatmapData[i][j]))
         .attr("stroke", "#fff")
         .attr("stroke-width", 1)
-        .attr("data-row", i)
-        .attr("data-col", j)
+        .attr("data-row", i)        .attr("data-col", j)
         .each(function() {
-          addHammerEvents(this, { row: i, col: j, amount: 5 }, "cell");
+          addHammerEvents(this, { row: i, col: j, amount: 1 }, "cell");
         });
         
-      
-      svg.append("text")
+        svg.append("text")
         .attr("class", "cell-label pointer-events-none")
         .attr("x", leftMargin + j * cellSize + cellSize/2)
         .attr("y", 40 + i * cellSize + cellSize/2)
         .attr("text-anchor", "middle")
         .attr("dominant-baseline", "central")
-        .attr("fill", heatmapData[i][j] > 30 ? "white" : "black")
+        .attr("fill", heatmapData[i][j] > 2 ? "white" : "black")
         .attr("font-size", "14px")
         .attr("font-weight", "bold")
-        .text(Math.round(heatmapData[i][j])); 
+        .text(Math.round(heatmapData[i][j]));
     }
   }
   
@@ -239,8 +227,7 @@ function renderHeatmap() {
     .attr("x2", "0%")
     .attr("y2", "0%");
     
-  
-  const maxValue = d3.max(heatmapData.flat());
+    const maxValue = 4; 
   [0, 0.25, 0.5, 0.75, 1].forEach(stop => {
     linearGradient.append("stop")
       .attr("offset", `${stop * 100}%`)
@@ -259,18 +246,16 @@ function renderHeatmap() {
   svg.append("text")
     .attr("class", "legend-title pointer-events-none")
     .attr("x", legendX + legendWidth / 2)
-    .attr("y", legendY - legendHeight / 2 - 15)
-    .attr("text-anchor", "middle")
+    .attr("y", legendY - legendHeight / 2 - 15)    .attr("text-anchor", "middle")
     .attr("font-weight", "bold")
-    .text("Minutes");
+    .text("Hours");
     
-  
-  svg.append("text")
+    svg.append("text")
     .attr("class", "legend-label pointer-events-none")
     .attr("x", legendX + legendWidth + 5)
     .attr("y", legendY - legendHeight / 2)
     .attr("dominant-baseline", "middle")
-    .text(Math.round(maxValue)); 
+    .text("4"); 
     
   svg.append("text")
     .attr("class", "legend-label pointer-events-none")
