@@ -3,7 +3,7 @@
   "short_name": "InputViz",
   "description": "Chart Interaction Tool for Data Visualization",
   "display": "standalone",
-  "start_url": "/",
+  "start_url": "/inputVisPrototype",
   "background_color": "#ffffff",
   "theme_color": "#ffffff"
 }
