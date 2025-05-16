@@ -55,20 +55,41 @@ const functionsMapPie = {
       } else {
         
         slice.value = Math.max(0, slice.value - Math.round(amount));
-        delete slice._originalValue;
-      }
+        delete slice._originalValue;      }
       
       renderPieChart();
-    }
-  },
-  pieChangeSection: function(data) {
-    const { task } = data;
+    }  },  pieChangeSection: function(data) {
+    const { task, deltaY, distance, isPreview, isFinalUpdate } = data;
     const slice = pieData.find(d => d.task === task);
+    
     if (slice) {
-      const newVal = parseInt(prompt(`Change value for ${task}:`),10);
-      if (!isNaN(newVal)) { slice.value = Math.round(newVal); renderPieChart(); }
+      
+      if (deltaY !== undefined && distance !== undefined) {
+        
+        if (isPreview && !slice._originalValue) {
+          slice._originalValue = slice.value;
+        }
+        
+        
+        
+        const direction = deltaY < 0 ? 1 : -1;
+        const changeAmount = Math.round(distance / 5); 
+        const newValue = slice._originalValue + (changeAmount * direction);
+        
+        
+        if (isPreview) {
+          slice.value = Math.max(0, newValue);
+        } else if (isFinalUpdate) {
+          delete slice._originalValue;
+        } else {
+          slice.value = Math.max(0, newValue);
+          delete slice._originalValue;
+        }
+        
+        renderPieChart();
+      }
     }
-  },  pieAddSection: function(data) {
+  },pieAddSection: function(data) {
     
     const sectionName = prompt("Enter name for new section:", "New Section");
     
@@ -106,9 +127,10 @@ function renderPieChart() {
     .attr("fill", "#f9f9f9")
     .lower();
   
-  
-  const radius = Math.min(600, 500) / 2 - 25;
-  const pie = d3.pie().value(d => d.value);
+    const radius = Math.min(600, 500) / 2 - 25;
+  const pie = d3.pie()
+    .value(d => d.value)
+    .sort(null); 
   const arc = d3.arc().innerRadius(0).outerRadius(radius);
   
   const labelArc = d3.arc().innerRadius(radius * 0.5).outerRadius(radius * 0.5);
@@ -126,11 +148,12 @@ function renderPieChart() {
   arcs.append("path")
     .attr("d", arc)
     .attr("fill", (d, i) => pastelColors[i % pastelColors.length])
-    .attr("stroke", (d, i) => borderColors[i % borderColors.length])
-    .attr("stroke-width", 2)
+    .attr("stroke", (d, i) => borderColors[i % borderColors.length])    .attr("stroke-width", 2)
     .attr("data-task", d => d.data.task)
     .each(function(d) {
-      addHammerEvents(this, { task: d.data.task, amount: 5 }, "sectionArea");
+      
+      
+      addHammerEvents(this, { task: d.data.task }, "sectionArea");
     });
   
   

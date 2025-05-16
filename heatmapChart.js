@@ -24,8 +24,7 @@ const functionsMapHeatmap = {
     const { row, col, amount, isPreview } = data;
     
     
-    var newAmount = Math.abs(amount);
-    newAmount = Math.round(-amount);
+    const newAmount = Math.abs(amount);
     
     if (heatmapData[row] && typeof heatmapData[row][col] === "number") {
       
@@ -47,9 +46,9 @@ const functionsMapHeatmap = {
   },
   heatmapRemoveTime: function(data) {
     const { row, col, amount, isPreview } = data;
-
-    newAmount = Math.abs(amount); 
-    newAmount = -amount;
+    
+    
+    const newAmount = Math.abs(amount);
     
     if (heatmapData[row] && typeof heatmapData[row][col] === "number") {
       
@@ -70,23 +69,29 @@ const functionsMapHeatmap = {
     }
   },
   heatmapChangeTime: function(data) {
-    const { row, col, eventX, eventY, xScale, yScale, isPreview } = data;
+    const { row, col, eventY, isPreview } = data;
 
     if (heatmapData[row] && typeof heatmapData[row][col] === "number") {
       
-      const newValue = Math.round(yScale.invert(eventY));
-
+      const cellSize = 60;
+      const maxValue = d3.max(heatmapData.flat());
+      
+      
+      
+      const cellTop = 40 + row * cellSize;
+      const cellBottom = cellTop + cellSize;
+      const relativeY = (cellBottom - eventY) / cellSize;
+      const newValue = Math.round(relativeY * maxValue);
+      
       
       if (isPreview && !heatmapData[row]._originalValues) {
         heatmapData[row]._originalValues = [...heatmapData[row]];
       }
 
       if (isPreview) {
-        
-        heatmapData[row][col] = newValue;
+        heatmapData[row][col] = Math.max(0, Math.min(maxValue, newValue));
       } else {
-        
-        heatmapData[row][col] = newValue;
+        heatmapData[row][col] = Math.max(0, Math.min(maxValue, newValue));
         delete heatmapData[row]._originalValues;
       }
 
@@ -94,13 +99,37 @@ const functionsMapHeatmap = {
     }
   },
   heatmapAddColumn: function(data) {
-    alert("addColumn called");
+    
+    const defaultValue = 25;
+    
+    for (let i = 0; i < heatmapData.length; i++) {
+      heatmapData[i].push(defaultValue);
+    }
+    
+    renderHeatmap();
   },
   heatmapRemoveColumns: function(data) {
-    alert("removeColumns called");
+    
+    if (heatmapData[0].length > 1) {
+      for (let i = 0; i < heatmapData.length; i++) {
+        heatmapData[i].pop();
+      }
+      renderHeatmap();
+    }
   },
   heatmapMergeColumns: function(data) {
-    alert("mergeColumns called");
+    const { col } = data;
+    
+    
+    if (col < heatmapData[0].length - 1) {
+      for (let i = 0; i < heatmapData.length; i++) {
+        
+        heatmapData[i][col] = Math.round((heatmapData[i][col] + heatmapData[i][col + 1]) / 2);
+        
+        heatmapData[i].splice(col + 1, 1);
+      }
+      renderHeatmap();
+    }
   }
 };
 
@@ -153,7 +182,7 @@ function renderHeatmap() {
         .attr("data-row", i)
         .attr("data-col", j)
         .each(function() {
-          addHammerEvents(this, { row: i, col: j, amount: 15 }, "cell");
+          addHammerEvents(this, { row: i, col: j, amount: 5 }, "cell");
         });
         
       
@@ -250,9 +279,10 @@ function renderHeatmap() {
     .attr("dominant-baseline", "middle")
     .text("0");
   
+  
   svg.selectAll(".chart-bg")
     .each(function() {
-      addHammerEvents(this, { xScale: xScale, yScale: yScale }, "outsideCells");
+      addHammerEvents(this, {}, "outsideCells");
     });
 }
 
