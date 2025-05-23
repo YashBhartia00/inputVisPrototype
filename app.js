@@ -431,32 +431,22 @@ function addHammerEvents(element, data, part) {
     const chartX = ev.center.x - chartRect.left; 
     const chartY = ev.center.y - chartRect.top;  
 
-      const distance = Math.sqrt(deltaX * deltaX + deltaY * deltaY);
-    var direction = deltaY > 0 ? 1 : -1; 
-    if(deltaY < 30) direction = deltaX > 0 ? -1 : 1; 
-    const amount = direction; 
+    const distance = Math.sqrt(deltaX * deltaX + deltaY * deltaY);
+    var direction = Math.abs(deltaX) > Math.abs(deltaY) ? (deltaX > 0 ? 1 : -1) : (deltaY > 0 ? 1 : -1);
 
+    const updatedData = {
+    ...interactionState[elementId].startData,
+    deltaX,
+    deltaY,
+    amount: direction,
+    distance,
+    isPreview: true,
+    eventX: chartX,
+    eventY: chartY,
+    yPosition: chartY
+    };
     
-    if (amount !== interactionState[elementId].lastUpdateDelta) {
-      
-      const updatedData = {
-        ...interactionState[elementId].startData,
-        deltaX,
-        deltaY,
-        amount: amount,
-        distance,
-        isPreview: true,  
-        eventX: chartX,   
-        eventY: chartY,   
-        yPosition: chartY 
-      };
-
-      
-      triggerFunction(part, "pan", updatedData);
-
-      
-      interactionState[elementId].lastUpdateDelta = amount;
-      }
+    triggerFunction(part, "pan", updatedData);
     }
   });
   
