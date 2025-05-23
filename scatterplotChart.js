@@ -317,7 +317,7 @@ function renderScatterplot() {
     const coords = d3.pointer(event);
     const eventX = coords[0];
     const eventY = coords[1];
-    triggerFunction("outsidePoints", "tap", { eventX: eventX, eventY: eventY, xScale: xScale, yScale: yScale });
+    // triggerFunction("outsidePoints", "tap", { eventX: eventX, eventY: eventY, xScale: xScale, yScale: yScale });
   });
 }
 

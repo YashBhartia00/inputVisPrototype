@@ -291,7 +291,7 @@ function renderLineChart() {
     const coords = d3.pointer(event);
     const eventX = coords[0];
     const eventY = coords[1];
-    triggerFunction("outsideLines", "tap", { eventX: eventX, eventY: eventY, yScale: yScale });
+    // triggerFunction("outsideLines", "tap", { eventX: eventX, eventY: eventY, yScale: yScale });
   });
 }
 

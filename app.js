@@ -370,7 +370,7 @@ function addHammerEvents(element, data, part) {
   const tap = new Hammer.Tap({ event: 'tap', taps: 1 });
   const doubleTap = new Hammer.Tap({ event: 'doubletap', taps: 2 , posThreshold: 50, interval: 500 });
   const press = new Hammer.Press({ event: 'press' });
-  const pan = new Hammer.Pan({ event: 'pan', threshold: 0 });
+  const pan = new Hammer.Pan({ event: 'pan', threshold: 10 });
   const pinch = new Hammer.Pinch({ event: 'pinch' });
   const swipe = new Hammer.Swipe({ event: 'swipe' });
   
