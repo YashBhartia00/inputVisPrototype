@@ -18,32 +18,57 @@ let lineData = [
  **************************************************/
 
 const functionsMapLine = {  lineAddPoint: function(data) {
-    
-    
     if (data.isPreview) {
       return; 
     }
 
-    const newDay = lineData.length > 0 ? Math.max(...lineData.map(d => d.day)) + 1 : 1;
+    let newHeight = 10;
+    let targetDay;
     
-    let newHeight = 10; 
+    // If we have eventX and a scale, try to determine which day was clicked on
+    if (data.eventX !== undefined && data.xScale) {
+      const clickedDay = Math.round(data.xScale.invert(data.eventX));
+      
+      // Check if this day already exists in our data
+      const existingDayPoint = lineData.find(d => d.day === clickedDay);
+      
+      if (existingDayPoint) {
+        // We're updating an existing day
+        targetDay = clickedDay;
+      } else {
+        // New point on a specific day
+        targetDay = clickedDay;
+      }
+    } else {
+      // Default behavior - add to next day in sequence
+      targetDay = lineData.length > 0 ? Math.max(...lineData.map(d => d.day)) + 1 : 1;
+    }
+    
+    // Get the height from the Y position if available
     if (data.eventY !== undefined && data.yScale) {
       newHeight = data.yScale.invert(data.eventY);
-      
       newHeight = Math.round(newHeight);
-      
       newHeight = Math.max(0, newHeight);
-      
-      lineData.push({ day: newDay, height: newHeight });
-      renderLineChart();
-    } else {
-      console.error(data.eventY, data.yScale, "Invalid event position or scale for adding point.");
     }
-  },
-  lineRemovePoint: function(data) {
-    const { day, amount } = data;
-    const point = lineData.find(d => d.day === day);
-    if (point) { point.height = Math.max(0, Math.round(point.height - amount)); renderLineChart(); }
+    
+    // Either update existing point or add a new one
+    const existingIndex = lineData.findIndex(d => d.day === targetDay);
+    if (existingIndex !== -1) {
+      lineData[existingIndex].height = newHeight;
+    } else {
+      lineData.push({ day: targetDay, height: newHeight });
+    }
+    
+    // Sort data by day to ensure line continuity
+    lineData.sort((a, b) => a.day - b.day);
+    renderLineChart();
+  },lineRemovePoint: function(data) {
+    const { day } = data;
+    const index = lineData.findIndex(d => d.day === day);
+    if (index !== -1) { 
+      lineData.splice(index, 1);
+      renderLineChart(); 
+    }
   },
   lineAddPointHeight: function(data) {
     const { day, amount, isPreview } = data;
@@ -188,8 +213,33 @@ function renderLineChart() {
     .range([40, 600 - 40]);
   
   const yScale = d3.scaleLinear()
-    .domain([0, (d3.max(lineData, d => d.height) || 20) + 1])
+    .domain([0, (d3.max(lineData, d => d.height) || 20) + 5])
     .range([500 - 40, 20]);
+  
+  // Add gridlines
+  // X-axis gridlines
+  svg.append("g")
+    .attr("class", "grid x-grid")
+    .attr("transform", `translate(0,${500 - 40})`)
+    .call(
+      d3.axisBottom(xScale)
+        .tickSize(-(500 - 60))
+        .tickFormat("")
+        .ticks(10)
+    )
+    .attr("stroke-opacity", 0.1);
+    
+  // Y-axis gridlines
+  svg.append("g")
+    .attr("class", "grid y-grid")
+    .attr("transform", `translate(40,0)`)
+    .call(
+      d3.axisLeft(yScale)
+        .tickSize(-(600 - 80))
+        .tickFormat("")
+        .ticks(10)
+    )
+    .attr("stroke-opacity", 0.1);
   
   const lineGenerator = d3.line()
     .x(d => xScale(d.day))
@@ -279,11 +329,10 @@ function renderLineChart() {
     .attr("y", 15)
     .attr("text-anchor", "middle")
     .text("Plant Height (cm)");
-  
-  svg.selectAll(".chart-bg")
+    svg.selectAll(".chart-bg")
     .each(function() {
       
-      addHammerEvents(this, { yScale: yScale }, "outsideLines");
+      addHammerEvents(this, { xScale: xScale, yScale: yScale }, "outsideLines");
     });
     
   
@@ -291,7 +340,7 @@ function renderLineChart() {
     const coords = d3.pointer(event);
     const eventX = coords[0];
     const eventY = coords[1];
-    // triggerFunction("outsideLines", "tap", { eventX: eventX, eventY: eventY, yScale: yScale });
+    // triggerFunction("outsideLines", "tap", { eventX: eventX, eventY: eventY, xScale: xScale, yScale: yScale });
   });
 }
 

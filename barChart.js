@@ -177,7 +177,7 @@ function renderBarChart() {
     .range([40, 600 - 80]) 
     .padding(0.1);
     const yScale = d3.scaleLinear()
-    .domain([0, (d3.max(barData, d => d.time) || 20) + 1])
+    .domain([0, (d3.max(barData, d => d.time) || 20) + 5])
     .range([500 - 40, 20]);
   
   

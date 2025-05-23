@@ -3,7 +3,7 @@
  **************************************************/
 
 
-const allGestures = ["tap", "double tap", "hold", "pan", "pinch in", "pinch out", "swipe left", "swipe right"];
+const allGestures = ["tap", "double tap", "hold", "pan", "pinch","pinch in", "pinch out", "swipe left", "swipe right"];
 
 
 let currentChartType = "bar";
@@ -418,73 +418,87 @@ function addHammerEvents(element, data, part) {
       lastUpdateDelta: 0  
     };
   });
-  
-  manager.on("pan", function(ev) {
+    manager.on("pan", function(ev) {
   if (interactionState[elementId]) {
     const chartContainer = document.getElementById("chart-container");
     const chartRect = chartContainer.getBoundingClientRect();
 
-    
+    // Calculate deltas from start position
     const deltaX = ev.center.x - interactionState[elementId].startX;
     const deltaY = ev.center.y - interactionState[elementId].startY;
 
+    // Calculate absolute coordinates within the chart
     const chartX = ev.center.x - chartRect.left; 
     const chartY = ev.center.y - chartRect.top;  
 
+    // Calculate additional useful values
     const distance = Math.sqrt(deltaX * deltaX + deltaY * deltaY);
-    var direction = Math.abs(deltaX) > Math.abs(deltaY) ? (deltaX > 0 ? 1 : -1) : (deltaY > 0 ? 1 : -1);
-
-    const updatedData = {
-    ...interactionState[elementId].startData,
-    deltaX,
-    deltaY,
-    amount: direction,
-    distance,
-    isPreview: true,
-    eventX: chartX,
-    eventY: chartY,
-    yPosition: chartY
-    };
+    // Determine direction based on dominant axis
+    const direction = Math.abs(deltaX) > Math.abs(deltaY) ? 
+      (deltaX > 0 ? 1 : -1) : (deltaY > 0 ? 1 : -1);
     
-    triggerFunction(part, "pan", updatedData);
-    }
-  });
-  
-  manager.on("panend", function(ev) {
-    if (interactionState[elementId]) {
-    const chartContainer = document.getElementById("chart-container");
-    const chartRect = chartContainer.getBoundingClientRect();
+    // Calculate amount with proportional sensitivity
+    const amount = direction * (Math.abs(deltaY) / 10); // Scale the amount based on movement
 
-    
-    const deltaX = ev.center.x - interactionState[elementId].startX;
-    const deltaY = ev.center.y - interactionState[elementId].startY;
-
-    const chartX = ev.center.x - chartRect.left; 
-    const chartY = ev.center.y - chartRect.top;  
-
-      const distance = Math.sqrt(deltaX * deltaX + deltaY * deltaY);
-    const direction = deltaY > 0 ? 1 : -1; 
-    const amount = direction; 
-
-    
+    // Update every frame to provide continuous updates
     const updatedData = {
       ...interactionState[elementId].startData,
       deltaX,
       deltaY,
-      amount: amount,
+      amount: direction, // For compatibility
+      scaledAmount: amount, // More granular amount
       distance,
-      isPreview: false,  
-      isFinalUpdate: true, 
-      eventX: chartX,   
-      eventY: chartY,   
-      yPosition: chartY 
+      isPreview: true,
+      eventX: chartX,
+      eventY: chartY,
+      yPosition: chartY
     };
 
-    
+    // Always trigger the function to provide continuous updates
     triggerFunction(part, "pan", updatedData);
-    
-    
-    delete interactionState[elementId];
+  }
+  });
+    manager.on("panend", function(ev) {
+    if (interactionState[elementId]) {
+      const chartContainer = document.getElementById("chart-container");
+      const chartRect = chartContainer.getBoundingClientRect();
+
+      // Calculate final deltas
+      const deltaX = ev.center.x - interactionState[elementId].startX;
+      const deltaY = ev.center.y - interactionState[elementId].startY;
+
+      // Calculate final position
+      const chartX = ev.center.x - chartRect.left; 
+      const chartY = ev.center.y - chartRect.top;  
+
+      // Calculate final distance and direction
+      const distance = Math.sqrt(deltaX * deltaX + deltaY * deltaY);
+      const direction = Math.abs(deltaX) > Math.abs(deltaY) ? 
+        (deltaX > 0 ? 1 : -1) : (deltaY > 0 ? 1 : -1);
+      
+      // Calculate amount with proportional sensitivity
+      const amount = direction * (Math.abs(deltaY) / 10);
+
+      // Final update data
+      const updatedData = {
+        ...interactionState[elementId].startData,
+        deltaX,
+        deltaY,
+        amount: direction,
+        scaledAmount: amount,
+        distance,
+        isPreview: false,
+        isFinalUpdate: true,
+        eventX: chartX,
+        eventY: chartY,
+        yPosition: chartY
+      };
+
+      // Trigger the final pan event
+      triggerFunction(part, "pan", updatedData);
+      
+      // Clean up the interaction state
+      delete interactionState[elementId];
     }
   });
   
@@ -517,14 +531,9 @@ function addHammerEvents(element, data, part) {
         };
         
         
-        if (ev.scale < 1) {
-          triggerFunction(part, "pinch in", updatedData);
-        } else if (ev.scale > 1) {
-          triggerFunction(part, "pinch out", updatedData);
-        } else {
-          triggerFunction(part, "pinch", updatedData);
-        }
-        
+
+        triggerFunction(part, "pinch", updatedData);
+
         
         interactionState[elementId].lastUpdateScale = amount;
       }

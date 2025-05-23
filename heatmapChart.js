@@ -67,29 +67,29 @@ const functionsMapHeatmap = {  heatmapAddTime: function(data) {
     if (heatmapData[row] && typeof heatmapData[row][col] === "number") {
       
       const cellSize = 60;
-      const maxValue = 4; 
+      const baseMaxValue = 8; // Using a higher base value for better granularity
       
       const cellTop = 40 + row * cellSize;
       const cellBottom = cellTop + cellSize;
       const relativeY = (cellBottom - eventY) / cellSize;
       
-      
-      const newValue = Math.round(relativeY * maxValue);
+      // No max limit applied here
+      const newValue = Math.round(relativeY * baseMaxValue);
       
       if (isPreview && !heatmapData[row]._originalValues) {
         heatmapData[row]._originalValues = [...heatmapData[row]];
       }
 
       if (isPreview) {
-        heatmapData[row][col] = Math.max(0, Math.min(maxValue, newValue));
+        heatmapData[row][col] = Math.max(0, newValue); // No upper limit
       } else {
-        heatmapData[row][col] = Math.max(0, Math.min(maxValue, newValue));
+        heatmapData[row][col] = Math.max(0, newValue); // No upper limit
         delete heatmapData[row]._originalValues;
       }
 
       renderHeatmap();
     }
-  },  heatmapAddColumn: function(data) {
+  },heatmapAddColumn: function(data) {
     
     const defaultValue = 1; 
     
@@ -150,10 +150,21 @@ function renderHeatmap() {
   const cellSize = 60;
   const numRows = heatmapData.length;
   const numCols = heatmapData[0].length;
+      const chartWidth = cellSize * numCols;
+  
+  // Find the actual maximum value in the data
+  let actualMaxValue = 0;
+  for(let i = 0; i < numRows; i++) {
+    for(let j = 0; j < numCols; j++) {
+      actualMaxValue = Math.max(actualMaxValue, heatmapData[i][j]);
+    }
+  }
+  
+  // Use at least 4 as minimum for the scale, but allow higher values
+  const scaleMaxValue = Math.max(4, actualMaxValue);
     
-  const chartWidth = cellSize * numCols;
-    const colorScale = d3.scaleSequential()
-    .domain([0, 4]) 
+  const colorScale = d3.scaleSequential()
+    .domain([0, scaleMaxValue]) 
     .interpolator(t => d3.interpolateLab("white", "purple")(t)); 
   
   
@@ -226,12 +237,11 @@ function renderHeatmap() {
     .attr("y1", "100%")
     .attr("x2", "0%")
     .attr("y2", "0%");
-    
-    const maxValue = 4; 
+      // Using the dynamic scale max value from above
   [0, 0.25, 0.5, 0.75, 1].forEach(stop => {
     linearGradient.append("stop")
       .attr("offset", `${stop * 100}%`)
-      .attr("stop-color", colorScale(stop * maxValue));
+      .attr("stop-color", colorScale(stop * scaleMaxValue));
   });
   
   
@@ -249,13 +259,12 @@ function renderHeatmap() {
     .attr("y", legendY - legendHeight / 2 - 15)    .attr("text-anchor", "middle")
     .attr("font-weight", "bold")
     .text("Hours");
-    
-    svg.append("text")
+      svg.append("text")
     .attr("class", "legend-label pointer-events-none")
     .attr("x", legendX + legendWidth + 5)
     .attr("y", legendY - legendHeight / 2)
     .attr("dominant-baseline", "middle")
-    .text("4"); 
+    .text(scaleMaxValue.toString()); 
     
   svg.append("text")
     .attr("class", "legend-label pointer-events-none")

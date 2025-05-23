@@ -179,8 +179,7 @@ function renderScatterplot() {
   const xMaxAbs = Math.max(Math.abs(xMin), Math.abs(xMax), 5);
   const yMaxAbs = Math.max(Math.abs(yMin), Math.abs(yMax), 5);
   
-  
-  const xScale = d3.scaleLinear()
+    const xScale = d3.scaleLinear()
     .domain([-xMaxAbs, xMaxAbs])
     .range([50, 600 - 50])
     .nice(); 
@@ -188,7 +187,34 @@ function renderScatterplot() {
   const yScale = d3.scaleLinear()
     .domain([-yMaxAbs, yMaxAbs])
     .range([500 - 30, 30])
-    .nice(); 
+    .nice();
+    
+  // Add gridlines
+  // X-axis gridlines (horizontal lines)
+  svg.append("g")
+    .attr("class", "grid x-grid")
+    .attr("transform", `translate(0,${500 - 30})`) // Position at bottom of chart
+    .call(
+      d3.axisBottom(xScale)
+        .tickSize(-(500 - 60)) // Full height of chart area
+        .tickFormat("")
+        .ticks(10)
+    )
+    .attr("stroke-opacity", 0.1)
+    .attr("color", "#ccc");
+    
+  // Y-axis gridlines (vertical lines)
+  svg.append("g")
+    .attr("class", "grid y-grid")
+    .attr("transform", `translate(50,0)`) // Position at left edge of chart
+    .call(
+      d3.axisLeft(yScale)
+        .tickSize(-(600 - 100)) // Full width of chart area
+        .tickFormat("")
+        .ticks(10)
+    )
+    .attr("stroke-opacity", 0.1)
+    .attr("color", "#ccc");
   
     
   if (!window.categoryColorMap) {
